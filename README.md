@@ -13,7 +13,7 @@
 
 ### Mobile
 - Android (Kotlin/Java)
-- iOS (Planned)
+
 
 ### Database
 - PostgreSQL / MySQL
@@ -33,10 +33,10 @@
 ## Team Members
 | Name | Role | CIT-U Email | GitHub |
 |------|------|-------------|--------|
-| Gwyn M. Sapio | Developer | gwyn.sapio@cit.edu | 
-| Jeric Kiel B. Melocoton | Developer | jerickiel.melocoton@cit.edu | 
+| Gwyn M. Sapio | Developer | gwyn.sapio@cit.edu | pengwyn7 |
+| Jeric Kiel B. Melocoton | Developer | jerickiel.melocoton@cit.edu | Serkiel |
 | Louis Drey F. Castaneto | Developer | louisdrey.castaneto@cit.edu | 
-| Steven Jan M. Tabungar | Developer | stevenjan.tabungar@cit.edu | 
+| Steven Jan M. Tabungar | Developer | stevenjan.tabungar@cit.edu | Smuffinn |
 
 ## Deployed Link
 Not yet deployed
