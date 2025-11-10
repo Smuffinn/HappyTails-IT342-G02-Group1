@@ -1,5 +1,6 @@
 package com.happytails.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +17,7 @@ public class Pet {
 
     @ManyToOne
     @JoinColumn(name = "shelter_id", nullable = false)
+    @JsonBackReference
     private Shelter shelter;
 
     @Column(name = "name", length = 100)

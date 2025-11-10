@@ -1,5 +1,6 @@
 package com.happytails.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,5 +33,6 @@ public class Adopter {
     private String profilePetExperience;
 
     @OneToMany(mappedBy = "adopter")
+    @JsonManagedReference
     private Set<Application> applications;
 }

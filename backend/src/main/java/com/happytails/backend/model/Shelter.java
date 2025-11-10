@@ -1,5 +1,6 @@
 package com.happytails.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,8 +27,10 @@ public class Shelter {
     private String contactInfo;
 
     @OneToMany(mappedBy = "shelter")
+    @JsonManagedReference
     private Set<Pet> pets;
 
     @OneToMany(mappedBy = "shelter")
+    @JsonManagedReference
     private Set<ShelterStaff> staff;
 }

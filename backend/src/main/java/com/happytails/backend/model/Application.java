@@ -1,5 +1,6 @@
 package com.happytails.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,7 @@ public class Application {
 
     @ManyToOne
     @JoinColumn(name = "adopter_id", nullable = false)
+    @JsonBackReference
     private Adopter adopter;
 
     @ManyToOne
