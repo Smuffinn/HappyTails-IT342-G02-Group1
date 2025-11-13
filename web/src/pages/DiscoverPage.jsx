@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useNavigate } from 'react-router-dom'
 import { petService } from '../services/petservice'
@@ -30,7 +30,7 @@ const mockPets = [
     age: '3 years',
     size: 'medium',
     species: 'Cat',
-    imageUrl: pet2,
+    imageUrl: pet3,
     tags: ['Independent', 'Calm'],
   },
   {
@@ -40,7 +40,7 @@ const mockPets = [
     age: '4 years',
     size: 'medium',
     species: 'Dog',
-    imageUrl: pet3,
+    imageUrl: pet2,
     tags: ['Curious', 'Friendly'],
   },
   {
@@ -96,19 +96,17 @@ const mockPets = [
 ]
 
 export default function DiscoverPage() {
-  const navigate = useNavigate();
-  const { isAuthenticated, isStaff, email, logout } = useAuth();
+  const navigate = useNavigate()
+  const { isAuthenticated, isStaff, email, logout } = useAuth()
   const [pets, setPets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filterOpen, setFilterOpen] = useState(false)
   const [quickViewPet, setQuickViewPet] = useState(null)
-
-  const featuredPetsDisplay = useMemo(() => {
-    if (pets.length >= 6) return pets;
-    const needed = 6 - pets.length;
-    return [...pets, ...pets.slice(0, needed)];
-  }, [pets]);
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedSpecies, setSelectedSpecies] = useState(new Set())
+  const [selectedSizes, setSelectedSizes] = useState(new Set())
+  const [selectedLifeStages, setSelectedLifeStages] = useState(new Set())
 
   useEffect(() => {
     let mounted = true
@@ -126,6 +124,87 @@ export default function DiscoverPage() {
     }
     loadPets()
     return () => { mounted = false }
+  }, [])
+
+  const sourcePets = useMemo(() => (pets.length ? pets : mockPets), [pets])
+
+  const speciesOptions = useMemo(() => {
+    const unique = new Set()
+    sourcePets.forEach((pet) => {
+      if (pet?.species) unique.add(pet.species)
+    })
+    return Array.from(unique)
+  }, [sourcePets])
+
+  const sizeOptions = useMemo(() => {
+    const unique = new Set()
+    sourcePets.forEach((pet) => {
+      if (pet?.size) unique.add(pet.size)
+    })
+    return Array.from(unique)
+  }, [sourcePets])
+
+  const deriveLifeStage = useCallback((ageLabel) => {
+    if (!ageLabel) return 'Adult'
+    const match = String(ageLabel).match(/(\d+(?:\.\d+)?)/)
+    const value = match ? parseFloat(match[1]) : null
+    if (value === null || Number.isNaN(value)) return 'Adult'
+    if (value < 1) return 'Puppy'
+    if (value >= 1 && value < 3) return 'Juvenile'
+    if (value >= 3 && value < 7) return 'Adult'
+    return 'Senior'
+  }, [])
+
+  const lifeStageOptions = useMemo(() => {
+    const unique = new Set()
+    sourcePets.forEach((pet) => unique.add(deriveLifeStage(pet?.age)))
+    return Array.from(unique)
+  }, [sourcePets, deriveLifeStage])
+
+  const toggleSetValue = (setter) => (value) => {
+    setter((prev) => {
+      const next = new Set(prev)
+      if (next.has(value)) {
+        next.delete(value)
+      } else {
+        next.add(value)
+      }
+      return next
+    })
+  }
+
+  const clearFilters = useCallback(() => {
+    setSelectedSpecies(new Set())
+    setSelectedSizes(new Set())
+    setSelectedLifeStages(new Set())
+    setSearchTerm('')
+  }, [])
+
+  const filteredPets = useMemo(() => {
+    return sourcePets.filter((pet) => {
+      const matchesSearch = (() => {
+        if (!searchTerm.trim()) return true
+        const norm = searchTerm.trim().toLowerCase()
+        return (
+          (pet.name && pet.name.toLowerCase().includes(norm)) ||
+          (pet.breed && pet.breed.toLowerCase().includes(norm)) ||
+          (pet.species && pet.species.toLowerCase().includes(norm))
+        )
+      })()
+
+      const matchesSpecies = selectedSpecies.size === 0 || (pet.species && selectedSpecies.has(pet.species))
+
+      const matchesSize = selectedSizes.size === 0 || (pet.size && selectedSizes.has(pet.size))
+
+      const stage = deriveLifeStage(pet.age)
+      const matchesLifeStage = selectedLifeStages.size === 0 || selectedLifeStages.has(stage)
+
+      return matchesSearch && matchesSpecies && matchesSize && matchesLifeStage
+    })
+  }, [sourcePets, searchTerm, selectedSpecies, selectedSizes, selectedLifeStages, deriveLifeStage])
+
+  const handleSearchSubmit = useCallback((event) => {
+    event.preventDefault()
   }, [])
 
   return (
@@ -177,51 +256,78 @@ export default function DiscoverPage() {
               <div style={{ position: 'absolute', top: 90, right: 80, background: '#fff', borderRadius: 18, boxShadow: '0 8px 32px rgba(84,135,104,0.16)', padding: 32, minWidth: 340, minHeight: 340, zIndex: 1002, display: 'flex', flexDirection: 'column', gap: 24 }} onClick={e => e.stopPropagation()}>
                 <button onClick={() => setFilterOpen(false)} style={{ position: 'absolute', top: 12, right: 16, background: 'none', border: 'none', fontSize: 22, color: '#5e7263', cursor: 'pointer' }}>&times;</button>
                 <h3 style={{ margin: 0, color: '#253b2f', fontWeight: 700, fontSize: 17, marginBottom: 18 }}>Filters</h3>
-                <div style={{ marginBottom: 6 }}>
-                  <div style={{ fontWeight: 600, color: '#333', fontSize: 15, marginBottom: 8 }}>Species</div>
-                  <div style={{ display: 'flex', gap: 22, marginBottom: 6 }}>
-                    <span className="chip">Dog</span>
-                    <span className="chip">Cat</span>
-                    <span className="chip">Rabbit</span>
-                    <span className="chip">Bird</span>
-                  </div>
-                </div>
-                <div style={{ marginBottom: 6 }}>
-                  <div style={{ fontWeight: 600, color: '#333', fontSize: 15, marginBottom: 8 }}>Life Stage</div>
-                  <div style={{ display: 'flex', gap: 22, marginBottom: 6 }}>
-                    <span className="chip">Puppy</span>
-                    <span className="chip">Juvenile</span>
-                    <span className="chip">Adult</span>
-                    <span className="chip">Senior</span>
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, color: '#333', fontSize: 15, marginBottom: 8 }}>Size</div>
-                  <div style={{ display: 'flex', gap: 22 }}>
-                    <span className="chip">Small</span>
-                    <span className="chip">Medium</span>
-                    <span className="chip">Large</span>
-                  </div>
+                <FilterSection
+                  label="Species"
+                  options={speciesOptions}
+                  selected={selectedSpecies}
+                  onToggle={toggleSetValue(setSelectedSpecies)}
+                />
+                <FilterSection
+                  label="Life Stage"
+                  options={lifeStageOptions}
+                  selected={selectedLifeStages}
+                  onToggle={toggleSetValue(setSelectedLifeStages)}
+                />
+                <FilterSection
+                  label="Size"
+                  options={sizeOptions}
+                  selected={selectedSizes}
+                  onToggle={toggleSetValue(setSelectedSizes)}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="btn btn-outline"
+                    style={{ padding: '8px 20px', fontSize: 14 }}
+                  >
+                    Clear filters
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterOpen(false)}
+                    className="btn btn-primary"
+                    style={{ padding: '10px 24px', fontSize: 14 }}
+                  >
+                    Done
+                  </button>
                 </div>
               </div>
             </div>
           )}
         </div>
         {/* Search Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px rgba(84,135,104,0.04)', padding: '14px 24px', margin: '0 32px 24px 32px' }}>
-          <input placeholder="Search by name or breed..." style={{ flex: 1, border: 'none', outline: 'none', fontSize: 17, background: 'transparent', color: '#253b2f' }} />
-          <button style={{ background: 'var(--color-cta)', color: '#fff', borderRadius: 999, fontWeight: 600, padding: '8px 22px', border: 'none', fontSize: 15, cursor: 'pointer' }}>Search</button>
-        </div>
+        <form
+          style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px rgba(84,135,104,0.04)', padding: '14px 24px', margin: '0 32px 24px 32px' }}
+          onSubmit={handleSearchSubmit}
+        >
+          <input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search by name, breed, or species..."
+            style={{ flex: 1, border: 'none', outline: 'none', fontSize: 17, background: 'transparent', color: '#253b2f' }}
+          />
+          <button
+            type="submit"
+            style={{ background: 'var(--color-cta)', color: '#fff', borderRadius: 999, fontWeight: 600, padding: '8px 22px', border: 'none', fontSize: 15, cursor: 'pointer' }}
+          >
+            Search
+          </button>
+        </form>
       </div>
 
       {/* Pet Grid */}
       <main style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px 48px 32px' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#5e7263' }}>Loading pets…</div>
+        ) : filteredPets.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#5e7263' }}>
+            No pets match your filters yet. Try adjusting the search or filters.
+          </div>
         ) : (
           <>
             <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32, marginTop: 8 }}>
-              {featuredPetsDisplay.map((pet, index) => (
+              {filteredPets.map((pet, index) => (
                 <div key={pet.id ?? pet.name ?? index} style={{ background: '#fff', borderRadius: 20, boxShadow: '0 8px 28px rgba(84,135,104,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 320 }}>
                   <img src={pet.imageUrl} alt={pet.name} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
                   <div style={{ padding: 18 }}>
@@ -291,6 +397,32 @@ export default function DiscoverPage() {
           © {new Date().getFullYear()} Happy Tails. All rights reserved. · Privacy Policy · Terms of Service · Cookie Policy
         </div>
       </footer>
+    </div>
+  )
+}
+
+function FilterSection({ label, options, selected, onToggle }) {
+  if (!options?.length) return null
+  return (
+    <div style={{ marginBottom: 6 }}>
+      <div style={{ fontWeight: 600, color: '#333', fontSize: 15, marginBottom: 8 }}>{label}</div>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        {options.map((option) => {
+          const isActive = selected.has(option)
+          const className = isActive ? 'chip is-active' : 'chip'
+          return (
+            <button
+              type="button"
+              key={option}
+              className={className}
+              onClick={() => onToggle(option)}
+              style={{ cursor: 'pointer', background: 'transparent' }}
+            >
+              {option}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
