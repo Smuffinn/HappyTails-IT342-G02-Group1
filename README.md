@@ -21,7 +21,7 @@
 - Axios 1.13.2
 
 ### Mobile
-- Android (Kotlin/Java) - Coming Soon
+- Android (Kotlin/Java)
 
 ### Database
 - MySQL
