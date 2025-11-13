@@ -3,82 +3,96 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useNavigate } from 'react-router-dom'
 import { petService } from '../services/petservice'
 import PetQuickView from '../modules/pets/PetQuickView.jsx'
+import pet1 from '../assets/pet1.jpg'
+import pet2 from '../assets/pet2.jpg'
+import pet3 from '../assets/pet3.jpg'
+import pet4 from '../assets/pet4.jpg'
+import pet5 from '../assets/pet5.jpg'
+import pet6 from '../assets/pet6.jpg'
+import pet7 from '../assets/pet7.jpg'
+import pet8 from '../assets/pet8.jpg'
 
-	const mockPets = [
-	{
-		id: 1,
-		name: 'Luna',
-		breed: 'Golden Retriever',
-		age: '2 years',
-		size: 'large',
-    imageUrl: 'https://th.bing.com/th/id/OIP.hp6wntBrX3zPMbVAhZoQWwHaE8?w=225&h=150&c=6&o=7&cb=ucfimgc2&pid=1.7&rm=3',
-		tags: ['Friendly', 'Playful'],
-	},
-	{
-		id: 2,
-		name: 'Whiskers',
-		breed: 'Tabby Mix',
-		age: '3 years',
-		size: 'medium',
-		imageUrl: 'https://th.bing.com/th/id/OIP.AnRS1uTadgQyx81IvPDPBwHaIt?w=160&h=189&c=7&r=0&o=7&cb=ucfimgc2&pid=1.7&rm=3',
-		tags: ['Independent', 'Calm'],
-	},
-	{
-		id: 3,
-		name: 'Max',
-		breed: 'Beagle',
-		age: '4 years',
-		size: 'medium',
-		imageUrl: 'https://th.bing.com/th/id/OIP.XjToZ5NEW-BeUEt1vpOs2QAAAA?w=266&h=180&c=7&r=0&o=7&cb=ucfimgc2&pid=1.7&rm=3',
-		tags: ['Curious', 'Friendly'],
-	},
-	{
-		id: 4,
-		name: 'Mittens',
-		breed: 'Siamese',
-		age: '1 year',
-		size: 'small',
-		imageUrl: 'https://th.bing.com/th/id/OIP.dY3AAJfRysMpKAKDumWsXgHaE8?w=291&h=194&c=7&r=0&o=7&cb=ucfimgc2&pid=1.7&rm=3',
-		tags: ['Vocal', 'Social'],
-	},
-	{
-		id: 5,
-		name: 'Bella',
-		breed: 'French Bulldog',
-		age: '3 years',
-		size: 'small',
-		imageUrl: 'https://th.bing.com/th/id/OIP.nRHf8xBDkSYBFZniCuwrKAHaEo?w=284&h=180&c=7&r=0&o=7&cb=ucfimgc2&pid=1.7&rm=3',
-		tags: ['Affectionate', 'Playful'],
-	},
-	{
-		id: 6,
-		name: 'Charlie',
-		breed: 'Labrador Mix',
-		age: '5 years',
-		size: 'large',
-		imageUrl: 'https://th.bing.com/th/id/OIP.Ogz6aSgh_DXZhIl-yD-KGAHaFA?w=222&h=150&c=6&o=7&cb=ucfimgc2&pid=1.7&rm=3',
-		tags: ['Loyal', 'Calm'],
-	},
-	{
-		id: 7,
-		name: 'Hoppy',
-		breed: 'Lop-Eared',
-		age: '2 years',
-		size: 'small',
-		species: 'Rabbit',
-		imageUrl: '/src/assets/pet7.svg',
-		tags: ['Gentle', 'Quiet'],
-	},
-	{
-		id: 8,
-		name: 'Tweety',
-		breed: 'Canary',
-		age: '1 year',
-		size: 'small',
-		species: 'Bird',
-		imageUrl: '/src/assets/pet8.svg',
-		tags: ['Cheerful', 'Active'],
-	},
+const mockPets = [
+  {
+    id: 1,
+    name: 'Luna',
+    breed: 'Golden Retriever',
+    age: '2 years',
+    size: 'large',
+    species: 'Dog',
+    imageUrl: pet1,
+    tags: ['Friendly', 'Playful'],
+  },
+  {
+    id: 2,
+    name: 'Whiskers',
+    breed: 'Tabby Mix',
+    age: '3 years',
+    size: 'medium',
+    species: 'Cat',
+    imageUrl: pet2,
+    tags: ['Independent', 'Calm'],
+  },
+  {
+    id: 3,
+    name: 'Max',
+    breed: 'Beagle',
+    age: '4 years',
+    size: 'medium',
+    species: 'Dog',
+    imageUrl: pet3,
+    tags: ['Curious', 'Friendly'],
+  },
+  {
+    id: 4,
+    name: 'Mittens',
+    breed: 'Siamese',
+    age: '1 year',
+    size: 'small',
+    species: 'Cat',
+    imageUrl: pet4,
+    tags: ['Vocal', 'Social'],
+  },
+  {
+    id: 5,
+    name: 'Bella',
+    breed: 'French Bulldog',
+    age: '3 years',
+    size: 'small',
+    species: 'Dog',
+    imageUrl: pet5,
+    tags: ['Affectionate', 'Playful'],
+  },
+  {
+    id: 6,
+    name: 'Charlie',
+    breed: 'Labrador Mix',
+    age: '5 years',
+    size: 'large',
+    species: 'Dog',
+    imageUrl: pet6,
+    tags: ['Loyal', 'Calm'],
+  },
+  {
+    id: 7,
+    name: 'Hoppy',
+    breed: 'Lop-Eared',
+    age: '2 years',
+    size: 'small',
+    species: 'Rabbit',
+    imageUrl: pet7,
+    tags: ['Gentle', 'Quiet'],
+  },
+  {
+    id: 8,
+    name: 'Tweety',
+    breed: 'Canary',
+    age: '1 year',
+    size: 'small',
+    species: 'Bird',
+    imageUrl: pet8,
+    tags: ['Cheerful', 'Active'],
+  },
 ]
 
 export default function DiscoverPage() {

@@ -4,6 +4,7 @@ import com.happytails.backend.dto.UpdateAdopterProfileRequest;
 import com.happytails.backend.dto.UpdateAdopterRequest;
 import com.happytails.backend.model.Adopter;
 import com.happytails.backend.service.AdopterService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,35 +35,57 @@ public class AdopterController {
     // Get current authenticated adopter profile
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentAdopter() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        String email = principal.toString();
-        Optional<Adopter> adopter = adopterService.findByEmail(email);
+        Optional<String> emailOpt = getCurrentUserEmail();
+        if (emailOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Optional<Adopter> adopter = adopterService.findByEmail(emailOpt.get());
         return adopter.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // Update the current adopter's profile
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody UpdateAdopterRequest req) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        String email = principal.toString();
+        Optional<String> emailOpt = getCurrentUserEmail();
+        if (emailOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         try {
-            Adopter updated = adopterService.updateProfileByEmail(email, req);
+            Adopter updated = adopterService.updateProfileByEmail(emailOpt.get(), req);
             return ResponseEntity.ok(updated);
-        } catch (RuntimeException ex) {
+        } catch (EntityNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
         }
     }
 
     // Delete current adopter account
-    @DeleteMapping
+    @DeleteMapping("/me")
     public ResponseEntity<?> deleteCurrentAdopter() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        String email = principal.toString();
-        adopterService.deleteByEmail(email);
+        Optional<String> emailOpt = getCurrentUserEmail();
+        if (emailOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        adopterService.deleteByEmail(emailOpt.get());
         return ResponseEntity.noContent().build();
+    }
+
+    private Optional<String> getCurrentUserEmail() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal == null) {
+            return Optional.empty();
+        }
+
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+            return Optional.ofNullable(userDetails.getUsername());
+        }
+
+        if (principal instanceof String str && !"anonymousUser".equalsIgnoreCase(str)) {
+            return Optional.of(str);
+        }
+
+        return Optional.empty();
     }
 
     // TODO:

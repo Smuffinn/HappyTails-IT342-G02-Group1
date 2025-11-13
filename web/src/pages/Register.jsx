@@ -25,7 +25,10 @@ export default function Register() {
     if (!password.trim()) nextFieldErrors.password = 'Password is required.'
     if (password && password.trim().length < 6) nextFieldErrors.password = 'Password must be at least 6 characters.'
     if (isStaffMode) {
-      if (!shelterId) nextFieldErrors.shelterId = 'Shelter is required for staff accounts.'
+      const numericShelterId = Number(shelterId)
+      if (!shelterId || Number.isNaN(numericShelterId) || numericShelterId <= 0) {
+        nextFieldErrors.shelterId = 'Shelter is required for staff accounts.'
+      }
     }
     setFieldErrors(nextFieldErrors)
     return Object.keys(nextFieldErrors).length === 0
@@ -189,9 +192,15 @@ export default function Register() {
                     style={{ borderRadius: 10, border: '1px solid #d6e2d6', padding: '12px 16px', fontSize: '1rem', background: '#fff', fontFamily: 'inherit' }}
                   >
                     <option value="">Select your shelter</option>
-                    {shelters.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
+                    {shelters.map((shelter) => {
+                      const value = shelter.shelterId ?? shelter.id
+                      const label = shelter.name ?? shelter.shelterName ?? `Shelter ${value}`
+                      return (
+                        <option key={value ?? label} value={value ?? ''}>
+                          {label}
+                        </option>
+                      )
+                    })}
                   </select>
                 ) : (
                   <input

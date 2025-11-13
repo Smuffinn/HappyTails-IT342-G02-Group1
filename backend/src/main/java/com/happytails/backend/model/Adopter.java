@@ -29,10 +29,10 @@ public class Adopter {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    @Column(name = "profile_personal_info", columnDefinition = "json")
+    @Column(name = "profile_personal_info", columnDefinition = "TEXT")
     private String profilePersonalInfo;
 
-    @Column(name = "profile_residence_details", columnDefinition = "json")
+    @Column(name = "profile_residence_details", columnDefinition = "TEXT")
     private String profileResidenceDetails;
 
     @Column(name = "profile_pet_experience", columnDefinition = "TEXT")

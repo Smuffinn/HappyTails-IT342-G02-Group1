@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class AdopterService {
@@ -40,7 +41,7 @@ public class AdopterService {
 
     public Adopter updateProfileByEmail(String email, UpdateAdopterRequest req) {
         Adopter adopter = adopterRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Adopter not found with email: " + email));
+                .orElseThrow(() -> new EntityNotFoundException("Adopter not found"));
 
         if (req.getPassword() != null && !req.getPassword().isBlank()) {
             adopter.setPassword(passwordEncoder.encode(req.getPassword()));

@@ -3,12 +3,14 @@ package com.happytails.backend.dto;
 import lombok.Getter;
 import lombok.Setter;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
 
 @Getter
 @Setter
 public class UpdateAdopterRequest {
 
 	// Optional new password. If provided, will be hashed by the service.
+	// Allow null/empty - only validate if non-blank value is provided
 	@Size(min = 6, message = "Password must be at least 6 characters")
 	private String password;
 

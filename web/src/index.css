@@ -1,3 +1,7 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
 :root {
   color-scheme: light;
   font-family: 'Manrope', 'Poppins', 'Segoe UI', sans-serif;
@@ -7,7 +11,6 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
   --color-bg: #f8f4ed;
   --color-surface: #ffffff;
   --color-surface-alt: #f1efe6;
@@ -24,6 +27,9 @@
   --radius-lg: 24px;
   --radius-md: 16px;
   --radius-sm: 10px;
+  --app-bg: #fdf6f2;
+  --panel-bg: #ffffff;
+  --muted: #6b7280;
 }
 
 * {
