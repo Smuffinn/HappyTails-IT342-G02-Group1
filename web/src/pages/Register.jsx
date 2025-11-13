@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { authService } from '../services/auth'
+import authService from '../services/auth'
 import api from '../services/api'
 import { useNavigate } from 'react-router-dom'
 
@@ -124,7 +124,7 @@ export default function Register() {
               >
                 <option value="">Select your shelter</option>
                 {shelters.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
+                  <option key={s.shelterId} value={s.shelterId}>{s.name}</option>
                 ))}
               </select>
             ) : (

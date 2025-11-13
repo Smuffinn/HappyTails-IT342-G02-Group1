@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { authService } from '../services/auth'
+import authService, { getUserRoleFromToken } from '../services/auth'
 import { useNavigate } from 'react-router-dom'
 
 export default function Login() {
@@ -20,8 +20,17 @@ export default function Login() {
       if (token) {
         localStorage.setItem('happytails_token', JSON.stringify(token))
       }
-      // Navigate to discover or profile
-      navigate('/')
+      
+      // Determine redirect based on user role
+      // Give a moment for localStorage to be ready
+      setTimeout(() => {
+        const role = getUserRoleFromToken()
+        if (role === 'staff') {
+          navigate('/') // Staff goes to Discover/Applications page
+        } else {
+          navigate('/profile') // Adopters go to Profile
+        }
+      }, 100)
     } catch (err) {
       setError(err?.message || String(err))
     } finally {
