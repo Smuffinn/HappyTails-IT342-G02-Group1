@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import javax.crypto.SecretKey;
 
 @Component
 public class JwtUtils {
@@ -47,15 +48,15 @@ public class JwtUtils {
     }
 
     public String getUserNameFromJwtToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build()
-                .parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parser().verifyWith((SecretKey) getSigningKey()).build()
+                .parseSignedClaims(token).getPayload().getSubject();
     }
 
     @SuppressWarnings("unchecked")
     public java.util.List<String> getRolesFromJwtToken(String token) {
         try {
-            io.jsonwebtoken.Claims claims = Jwts.parserBuilder().setSigningKey(getSigningKey()).build()
-                    .parseClaimsJws(token).getBody();
+            io.jsonwebtoken.Claims claims = Jwts.parser().verifyWith((SecretKey) getSigningKey()).build()
+                    .parseSignedClaims(token).getPayload();
             Object rolesObj = claims.get("roles");
             if (rolesObj instanceof java.util.List) {
                 return (java.util.List<String>) rolesObj;
@@ -68,7 +69,7 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(authToken);
+            Jwts.parser().verifyWith((SecretKey) getSigningKey()).build().parseSignedClaims(authToken);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;

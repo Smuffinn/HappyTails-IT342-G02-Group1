@@ -1,12 +1,12 @@
 package com.happytails.backend.controller;
 
 import com.happytails.backend.dto.LoginRequest;
-import com.happytails.backend.dto.RegisterAdopterRequest;
-import com.happytails.backend.dto.RegisterStaffRequest; // Make sure this is imported
-import com.happytails.backend.model.Adopter;
-import com.happytails.backend.model.ShelterStaff; // Make sure this is imported
-import com.happytails.backend.service.AuthService;
 import com.happytails.backend.dto.LoginResponse;
+import com.happytails.backend.dto.RegisterAdopterRequest;
+import com.happytails.backend.dto.RegisterStaffRequest; 
+import com.happytails.backend.model.Adopter;
+import com.happytails.backend.model.ShelterStaff; 
+import com.happytails.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,8 +31,8 @@ public class AuthController {
     // Fulfills FR-2 and part of FR-4
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-        String token = authService.login(request);
-        return ResponseEntity.ok(new LoginResponse(token, "Bearer"));
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
     }
 
     // Fulfills part of FR-4
