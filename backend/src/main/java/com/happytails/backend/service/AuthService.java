@@ -4,6 +4,9 @@ import com.happytails.backend.dto.LoginRequest;
 import com.happytails.backend.dto.LoginResponse;
 import com.happytails.backend.dto.RegisterAdopterRequest;
 import com.happytails.backend.dto.RegisterStaffRequest;
+import com.happytails.backend.exception.EmailAlreadyExistsException;
+import com.happytails.backend.exception.ResourceNotFoundException;
+import com.happytails.backend.exception.UserNotFoundException;
 import com.happytails.backend.model.Adopter;
 import com.happytails.backend.model.Shelter;
 import com.happytails.backend.model.ShelterStaff;
@@ -40,7 +43,7 @@ public class AuthService {
         // Step 1: Check if email already exists
         Optional<Adopter> existingAdopter = adopterRepository.findByEmail(request.getEmail());
         if (existingAdopter.isPresent()) {
-            throw new RuntimeException("Error: Email is already in use!");
+            throw new EmailAlreadyExistsException("Email is already in use: " + request.getEmail());
         }
 
         Adopter adopter = new Adopter();
@@ -59,12 +62,12 @@ public class AuthService {
         // Step 1: Check if email already exists
         Optional<ShelterStaff> existingStaff = shelterStaffRepository.findByEmail(request.getEmail());
         if (existingStaff.isPresent()) {
-            throw new RuntimeException("Error: Email is already in use!");
+            throw new EmailAlreadyExistsException("Email is already in use: " + request.getEmail());
         }
 
         // Step 2: Find the shelter they belong to
         Shelter shelter = shelterRepository.findById(request.getShelterId())
-                .orElseThrow(() -> new RuntimeException("Error: Shelter not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Shelter not found with ID: " + request.getShelterId()));
 
         ShelterStaff staff = new ShelterStaff();
         staff.setEmail(request.getEmail());
@@ -105,6 +108,6 @@ public class AuthService {
         }
 
         // Step 5: If no user found or password mismatch
-        throw new RuntimeException("Error: Invalid email or password");
+        throw new UserNotFoundException("Invalid email or password");
     }
 }

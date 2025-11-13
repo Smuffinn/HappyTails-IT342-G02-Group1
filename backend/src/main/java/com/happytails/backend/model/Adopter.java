@@ -1,9 +1,14 @@
 package com.happytails.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -21,6 +26,7 @@ public class Adopter {
     private String email;
 
     @Column(name = "password", nullable = false, length = 255)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(name = "profile_personal_info", columnDefinition = "json")
@@ -35,4 +41,16 @@ public class Adopter {
     @OneToMany(mappedBy = "adopter")
     @JsonManagedReference
     private Set<Application> applications;
+
+    @OneToMany(mappedBy = "adopter")
+    @JsonManagedReference
+    private Set<Pet> adoptedPets;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }
