@@ -59,6 +59,26 @@ import PetQuickView from '../modules/pets/PetQuickView.jsx'
 		imageUrl: 'https://th.bing.com/th/id/OIP.Ogz6aSgh_DXZhIl-yD-KGAHaFA?w=222&h=150&c=6&o=7&cb=ucfimgc2&pid=1.7&rm=3',
 		tags: ['Loyal', 'Calm'],
 	},
+	{
+		id: 7,
+		name: 'Hoppy',
+		breed: 'Lop-Eared',
+		age: '2 years',
+		size: 'small',
+		species: 'Rabbit',
+		imageUrl: '/src/assets/pet7.svg',
+		tags: ['Gentle', 'Quiet'],
+	},
+	{
+		id: 8,
+		name: 'Tweety',
+		breed: 'Canary',
+		age: '1 year',
+		size: 'small',
+		species: 'Bird',
+		imageUrl: '/src/assets/pet8.svg',
+		tags: ['Cheerful', 'Active'],
+	},
 ]
 
 export default function DiscoverPage() {

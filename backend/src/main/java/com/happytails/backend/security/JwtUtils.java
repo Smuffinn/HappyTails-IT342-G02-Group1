@@ -18,8 +18,15 @@ public class JwtUtils {
     private int jwtExpirationMs;
 
     private Key getSigningKey() {
-        // Use the configured secret as HMAC key bytes
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        // Support either a raw secret string or a Base64-encoded secret.
+        // Try to decode as Base64 first (this lets you store a compact base64 key in APP_JWT_SECRET).
+        try {
+            byte[] keyBytes = io.jsonwebtoken.io.Decoders.BASE64.decode(jwtSecret);
+            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (IllegalArgumentException ex) {
+            // Not a valid Base64 string — fall back to using UTF-8 bytes of the provided secret.
+            return Keys.hmacShaKeyFor(jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
     }
 
     public String generateJwtToken(String username, java.util.List<String> roles) {

@@ -38,6 +38,8 @@ public class SecurityConfig {
             .requestMatchers("/api/auth/register-staff").permitAll()
             .requestMatchers("/api/shelters/**").permitAll()
             .requestMatchers("/api/pets/**").permitAll()
+            .requestMatchers("/api/staff/**").authenticated()
+            .requestMatchers("/api/adopters/**").authenticated()
             .anyRequest().authenticated()
         );
 
