@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react'
-import PetCard from '../components/PetCard'
+import { useAuth } from '../context/AuthContext.jsx'
+import { useNavigate } from 'react-router-dom'
 import { petService } from '../services/petservice'
-import applicationService from '../services/applicationService'
+import PetQuickView from '../modules/pets/PetQuickView.jsx'
 
 	const mockPets = [
 	{
@@ -10,8 +11,7 @@ import applicationService from '../services/applicationService'
 		breed: 'Golden Retriever',
 		age: '2 years',
 		size: 'large',
-		species: 'Dog',
-		imageUrl: '/src/assets/pet1.svg',
+    imageUrl: 'https://th.bing.com/th/id/OIP.hp6wntBrX3zPMbVAhZoQWwHaE8?w=225&h=150&c=6&o=7&cb=ucfimgc2&pid=1.7&rm=3',
 		tags: ['Friendly', 'Playful'],
 	},
 	{
@@ -20,8 +20,7 @@ import applicationService from '../services/applicationService'
 		breed: 'Tabby Mix',
 		age: '3 years',
 		size: 'medium',
-		species: 'Cat',
-		imageUrl: '/src/assets/pet2.svg',
+		imageUrl: 'https://th.bing.com/th/id/OIP.AnRS1uTadgQyx81IvPDPBwHaIt?w=160&h=189&c=7&r=0&o=7&cb=ucfimgc2&pid=1.7&rm=3',
 		tags: ['Independent', 'Calm'],
 	},
 	{
@@ -30,8 +29,7 @@ import applicationService from '../services/applicationService'
 		breed: 'Beagle',
 		age: '4 years',
 		size: 'medium',
-		species: 'Dog',
-		imageUrl: '/src/assets/pet3.svg',
+		imageUrl: 'https://th.bing.com/th/id/OIP.XjToZ5NEW-BeUEt1vpOs2QAAAA?w=266&h=180&c=7&r=0&o=7&cb=ucfimgc2&pid=1.7&rm=3',
 		tags: ['Curious', 'Friendly'],
 	},
 	{
@@ -40,8 +38,7 @@ import applicationService from '../services/applicationService'
 		breed: 'Siamese',
 		age: '1 year',
 		size: 'small',
-		species: 'Cat',
-		imageUrl: '/src/assets/pet4.svg',
+		imageUrl: 'https://th.bing.com/th/id/OIP.dY3AAJfRysMpKAKDumWsXgHaE8?w=291&h=194&c=7&r=0&o=7&cb=ucfimgc2&pid=1.7&rm=3',
 		tags: ['Vocal', 'Social'],
 	},
 	{
@@ -50,8 +47,7 @@ import applicationService from '../services/applicationService'
 		breed: 'French Bulldog',
 		age: '3 years',
 		size: 'small',
-		species: 'Dog',
-		imageUrl: '/src/assets/pet5.svg',
+		imageUrl: 'https://th.bing.com/th/id/OIP.nRHf8xBDkSYBFZniCuwrKAHaEo?w=284&h=180&c=7&r=0&o=7&cb=ucfimgc2&pid=1.7&rm=3',
 		tags: ['Affectionate', 'Playful'],
 	},
 	{
@@ -60,8 +56,7 @@ import applicationService from '../services/applicationService'
 		breed: 'Labrador Mix',
 		age: '5 years',
 		size: 'large',
-		species: 'Dog',
-		imageUrl: '/src/assets/pet6.svg',
+		imageUrl: 'https://th.bing.com/th/id/OIP.Ogz6aSgh_DXZhIl-yD-KGAHaFA?w=222&h=150&c=6&o=7&cb=ucfimgc2&pid=1.7&rm=3',
 		tags: ['Loyal', 'Calm'],
 	},
 	{
@@ -87,246 +82,201 @@ import applicationService from '../services/applicationService'
 ]
 
 export default function DiscoverPage() {
-	const [pets, setPets] = useState([])
-	const [loading, setLoading] = useState(true)
-	const [error, setError] = useState(null)
-	const [viewMode, setViewMode] = useState('grid') // 'grid' or 'list'
-	const [selectedSpecies, setSelectedSpecies] = useState('all')
-	const [selectedSize, setSelectedSize] = useState('all')
+  const navigate = useNavigate();
+  const { isAuthenticated, isStaff, email, logout } = useAuth();
+  const [pets, setPets] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [quickViewPet, setQuickViewPet] = useState(null)
 
-	// Extract unique species and sizes from mock data
-	const speciesOptions = useMemo(() => {
-		const species = new Set(mockPets.map(p => p.species))
-		return Array.from(species).sort()
-	}, [])
+  const featuredPetsDisplay = useMemo(() => {
+    if (pets.length >= 6) return pets;
+    const needed = 6 - pets.length;
+    return [...pets, ...pets.slice(0, needed)];
+  }, [pets]);
 
-	const sizeOptions = ['small', 'medium', 'large']
+  useEffect(() => {
+    let mounted = true
+    async function loadPets() {
+      try {
+        const data = await petService.getAllPets()
+        if (!mounted) return
+        setPets(Array.isArray(data) && data.length > 0 ? data : mockPets)
+      } catch (err) {
+        setError(err)
+        setPets(mockPets)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadPets()
+    return () => { mounted = false }
+  }, [])
 
-	// Filter pets based on selected criteria
-	const filteredPets = useMemo(() => {
-		return pets.filter(pet => {
-			const speciesMatch = selectedSpecies === 'all' || pet.species === selectedSpecies
-			const sizeMatch = selectedSize === 'all' || pet.size === selectedSize
-			return speciesMatch && sizeMatch
-		})
-	}, [pets, selectedSpecies, selectedSize])
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
+      {/* Header Bar */}
+      <header style={{ background: '#f8f4ed', padding: '18px 0', borderBottom: '1px solid #e0e4d6', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+            <span style={{ fontWeight: 700, fontSize: 20, color: '#4f8a3a' }}>Happy Tails</span>
+            <span style={{ color: '#5e7263', fontSize: 13 }}>Find Your Forever Friend</span>
+          </button>
+          <nav style={{ display: 'flex', gap: 32, fontSize: 15, alignItems: 'center' }}>
+            <button type="button" onClick={() => navigate('/discover')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Discover Pets</button>
+            <button type="button" onClick={() => navigate('/quiz')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Take Quiz</button>
+            {isStaff ? (
+              <button type="button" onClick={() => navigate('/shelter/pets')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Shelter Dashboard</button>
+            ) : (
+              <button type="button" onClick={() => navigate('/profile')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Profile</button>
+            )}
+            {isAuthenticated ? (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 16 }}>
+                <span style={{ fontSize: '0.9rem', color: '#5e7263' }}>{email}</span>
+                <button type="button" onClick={logout} style={{ background: 'none', border: '1px solid rgba(79, 138, 58, 0.3)', color: '#4f8a3a', fontWeight: 600, cursor: 'pointer', borderRadius: 999, padding: '8px 18px' }}>Logout</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', color: '#4f8a3a', fontWeight: 600, cursor: 'pointer' }}>Login</button>
+            )}
+          </nav>
+        </div>
+      </header>
 
-	useEffect(() => {
-		let mounted = true
+      {/* Page Title and Filter Bar */}
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 0 0 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, padding: '0 32px' }}>
+          <div>
+            <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#253b2f', margin: 0 }}>Discover Pets</h1>
+            <p style={{ color: '#5e7263', margin: 0, fontSize: 16 }}>Browse adoptable pets waiting for their forever home.</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              style={{ background: '#fff', border: '1px solid #e0e4d6', borderRadius: 999, padding: '8px 22px', color: '#253b2f', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}
+              onClick={() => setFilterOpen(true)}
+            >
+              Filter
+            </button>
+          </div>
+          {filterOpen && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.12)', zIndex: 1001 }} onClick={() => setFilterOpen(false)}>
+              <div style={{ position: 'absolute', top: 90, right: 80, background: '#fff', borderRadius: 18, boxShadow: '0 8px 32px rgba(84,135,104,0.16)', padding: 32, minWidth: 340, minHeight: 340, zIndex: 1002, display: 'flex', flexDirection: 'column', gap: 24 }} onClick={e => e.stopPropagation()}>
+                <button onClick={() => setFilterOpen(false)} style={{ position: 'absolute', top: 12, right: 16, background: 'none', border: 'none', fontSize: 22, color: '#5e7263', cursor: 'pointer' }}>&times;</button>
+                <h3 style={{ margin: 0, color: '#253b2f', fontWeight: 700, fontSize: 17, marginBottom: 18 }}>Filters</h3>
+                <div style={{ marginBottom: 6 }}>
+                  <div style={{ fontWeight: 600, color: '#333', fontSize: 15, marginBottom: 8 }}>Species</div>
+                  <div style={{ display: 'flex', gap: 22, marginBottom: 6 }}>
+                    <span className="chip">Dog</span>
+                    <span className="chip">Cat</span>
+                    <span className="chip">Rabbit</span>
+                    <span className="chip">Bird</span>
+                  </div>
+                </div>
+                <div style={{ marginBottom: 6 }}>
+                  <div style={{ fontWeight: 600, color: '#333', fontSize: 15, marginBottom: 8 }}>Life Stage</div>
+                  <div style={{ display: 'flex', gap: 22, marginBottom: 6 }}>
+                    <span className="chip">Puppy</span>
+                    <span className="chip">Juvenile</span>
+                    <span className="chip">Adult</span>
+                    <span className="chip">Senior</span>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, color: '#333', fontSize: 15, marginBottom: 8 }}>Size</div>
+                  <div style={{ display: 'flex', gap: 22 }}>
+                    <span className="chip">Small</span>
+                    <span className="chip">Medium</span>
+                    <span className="chip">Large</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Search Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px rgba(84,135,104,0.04)', padding: '14px 24px', margin: '0 32px 24px 32px' }}>
+          <input placeholder="Search by name or breed..." style={{ flex: 1, border: 'none', outline: 'none', fontSize: 17, background: 'transparent', color: '#253b2f' }} />
+          <button style={{ background: 'var(--color-cta)', color: '#fff', borderRadius: 999, fontWeight: 600, padding: '8px 22px', border: 'none', fontSize: 15, cursor: 'pointer' }}>Search</button>
+        </div>
+      </div>
 
-		async function loadPets() {
-			try {
-				const data = await petService.getAllPets()
-				if (!mounted) return
-				setPets(Array.isArray(data) && data.length > 0 ? data : mockPets)
-			} catch (err) {
-				// fallback to mock data if backend not available
-				setError(err)
-				setPets(mockPets)
-			} finally {
-				setLoading(false)
-			}
-		}
+      {/* Pet Grid */}
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px 48px 32px' }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#5e7263' }}>Loading pets…</div>
+        ) : (
+          <>
+            <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32, marginTop: 8 }}>
+              {featuredPetsDisplay.map((pet, index) => (
+                <div key={pet.id ?? pet.name ?? index} style={{ background: '#fff', borderRadius: 20, boxShadow: '0 8px 28px rgba(84,135,104,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 320 }}>
+                  <img src={pet.imageUrl} alt={pet.name} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
+                  <div style={{ padding: 18 }}>
+                    <div style={{ fontWeight: 700, fontSize: 17 }}>{pet.name}</div>
+                    <div style={{ color: '#5e7263', fontSize: 14, marginBottom: 8 }}>{pet.breed} - {pet.age}</div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {pet.tags && pet.tags.length ? pet.tags.map(trait => <span key={trait} style={{ background: '#f1efe6', borderRadius: 999, padding: '4px 12px', fontWeight: 600, fontSize: 13 }}>{trait}</span>) : null}
+                    </div>
+                  </div>
+                  <div style={{ borderTop: '1px solid #f1efe6', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 600, color: '#4f8a3a', fontSize: 15 }}>Ready for adoption</span>
+                    <button
+                      type="button"
+                      onClick={() => setQuickViewPet(pet)}
+                      style={{ background: 'var(--color-cta)', color: '#fff', borderRadius: 999, fontWeight: 600, padding: '8px 22px', border: 'none', cursor: 'pointer' }}
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </section>
+            {quickViewPet && (
+              <PetQuickView pet={quickViewPet} onClose={() => setQuickViewPet(null)} />
+            )}
+          </>
+        )}
+        {error && (
+          <div style={{ marginTop: 24, color: '#d64545', textAlign: 'center', fontSize: 15 }}>Unable to load live pets (using local samples).</div>
+        )}
+      </main>
 
-		loadPets()
-		return () => {
-			mounted = false
-		}
-	}, [])
-
-	const refreshPets = async () => {
-		try {
-			const data = await petService.getAllPets()
-			setPets(Array.isArray(data) && data.length > 0 ? data : mockPets)
-		} catch (e) {
-			setPets(mockPets)
-		}
-	}
-
-	const handleApply = async (pet) => {
-		if (!confirm(`Submit application for ${pet.name}?`)) return
-		try {
-			await applicationService.submitApplication(pet.id, '')
-			await refreshPets()
-			alert('Application submitted')
-		} catch (e) {
-			alert(String(e.message || e))
-		}
-	}
-
-	return (
-		<main className="max-w-7xl mx-auto px-6 py-10">
-			<header className="flex items-center justify-between mb-6">
-				<div>
-					<h1 className="text-2xl font-semibold text-slate-900">Discover Pets</h1>
-					<p className="text-sm text-slate-500">Browse {filteredPets.length} adorable pets waiting for their forever homes</p>
-				</div>
-			</header>
-
-			{/* Filters Section */}
-			<section className="mb-8 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
-				<div className="space-y-4">
-					{/* Filter Title and View Toggle */}
-					<div className="flex items-center justify-between">
-						<h2 className="text-lg font-semibold text-slate-700">Filters</h2>
-						{/* View Toggle */}
-						<div className="flex gap-2 bg-white p-1 rounded-lg border border-gray-200">
-							<button
-								onClick={() => setViewMode('grid')}
-								className={`px-3 py-1 rounded text-sm font-medium transition ${
-									viewMode === 'grid'
-										? 'bg-emerald-500 text-white'
-										: 'bg-white text-slate-600 hover:text-slate-900'
-								}`}
-								title="Grid view"
-							>
-								⊞ Grid
-							</button>
-							<button
-								onClick={() => setViewMode('list')}
-								className={`px-3 py-1 rounded text-sm font-medium transition ${
-									viewMode === 'list'
-										? 'bg-emerald-500 text-white'
-										: 'bg-white text-slate-600 hover:text-slate-900'
-								}`}
-								title="List view"
-							>
-								≡ List
-							</button>
-						</div>
-					</div>
-
-					{/* Species Filter */}
-					<div>
-						<label className="block text-sm font-medium text-slate-700 mb-2">Species</label>
-						<div className="flex flex-wrap gap-2">
-							<button
-								onClick={() => setSelectedSpecies('all')}
-								className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-									selectedSpecies === 'all'
-										? 'bg-emerald-500 text-white'
-										: 'bg-white border border-gray-300 text-slate-700 hover:border-emerald-400'
-								}`}
-							>
-								All
-							</button>
-							{speciesOptions.map(species => (
-								<button
-									key={species}
-									onClick={() => setSelectedSpecies(species)}
-									className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-										selectedSpecies === species
-											? 'bg-emerald-500 text-white'
-											: 'bg-white border border-gray-300 text-slate-700 hover:border-emerald-400'
-									}`}
-								>
-									{species}
-								</button>
-							))}
-						</div>
-					</div>
-
-					{/* Size Filter */}
-					<div>
-						<label className="block text-sm font-medium text-slate-700 mb-2">Size</label>
-						<div className="flex flex-wrap gap-2">
-							<button
-								onClick={() => setSelectedSize('all')}
-								className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-									selectedSize === 'all'
-										? 'bg-emerald-500 text-white'
-										: 'bg-white border border-gray-300 text-slate-700 hover:border-emerald-400'
-								}`}
-							>
-								All
-							</button>
-							{sizeOptions.map(size => (
-								<button
-									key={size}
-									onClick={() => setSelectedSize(size)}
-									className={`px-4 py-2 rounded-full text-sm font-medium transition capitalize ${
-										selectedSize === size
-											? 'bg-emerald-500 text-white'
-											: 'bg-white border border-gray-300 text-slate-700 hover:border-emerald-400'
-									}`}
-								>
-									{size}
-								</button>
-							))}
-						</div>
-					</div>
-				</div>
-			</section>
-
-			{loading ? (
-				<div className="text-center py-12 text-slate-500">Loading pets…</div>
-			) : viewMode === 'grid' ? (
-				<section className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-					{filteredPets.map((p) => (
-						<PetCard key={p.id ?? p.name} pet={{...p, onApply: () => handleApply(p)}} />
-					))}
-				</section>
-			) : (
-				<section className="space-y-3">
-					{filteredPets.map((p) => (
-						<div key={p.id ?? p.name} className="flex items-center gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:border-emerald-300 hover:shadow-md transition">
-							{/* Pet Image */}
-							<div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-200">
-								<img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-							</div>
-
-							{/* Pet Info */}
-							<div className="flex-1 min-w-0">
-								<h3 className="font-semibold text-slate-900">{p.name}</h3>
-								<p className="text-sm text-slate-600">{p.breed} • {p.age}</p>
-								<div className="flex gap-1 mt-1 flex-wrap">
-									<span className="inline-block px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded">
-										{p.species}
-									</span>
-									<span className="inline-block px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded capitalize">
-										{p.size}
-									</span>
-									{p.tags && p.tags.slice(0, 1).map((tag, i) => (
-										<span key={i} className="inline-block px-2 py-1 text-xs bg-emerald-100 text-emerald-700 rounded">
-											{tag}
-										</span>
-									))}
-								</div>
-							</div>
-
-							{/* Status Badge and Button */}
-							<div className="flex-shrink-0 flex flex-col items-end gap-2">
-								{p.status && (
-									<span className={`px-2 py-1 text-xs font-medium rounded ${
-										p.status === 'Available' ? 'bg-emerald-100 text-emerald-700' :
-										p.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
-										'bg-slate-100 text-slate-700'
-									}`}>
-										{p.status}
-									</span>
-								)}
-								{p.status === 'Available' && (
-									<button
-										onClick={() => handleApply(p)}
-										className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition"
-									>
-										Apply
-									</button>
-								)}
-							</div>
-						</div>
-					))}
-					{filteredPets.length === 0 && (
-						<div className="text-center py-12 text-slate-500">
-							No pets match your filters
-						</div>
-					)}
-				</section>
-			)}
-
-			{error && (
-				<div className="mt-6 text-sm text-rose-600">Unable to load live pets (using local samples).</div>
-			)}
-		</main>
-	)
+      {/* Footer */}
+      <footer style={{ background: '#163522', color: '#def7dd', padding: '48px 0 24px', marginTop: 80 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', gap: 48, justifyContent: 'space-between', flexWrap: 'wrap', padding: '0 32px' }}>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Happy Tails</h4>
+            <p style={{ color: '#b5e6c9', fontSize: 15 }}>Connecting loving families with shelter animals since 2025. Discover your next best friend and build your adoption story with us.</p>
+          </div>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Quick Links</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#b5e6c9', fontSize: 15 }}>
+              <li><a href="/discover" style={{ color: '#b5e6c9', textDecoration: 'none' }}>Discover Pets</a></li>
+              <li><a href="/quiz" style={{ color: '#b5e6c9', textDecoration: 'none' }}>Take Quiz</a></li>
+              <li><a href="/profile" style={{ color: '#b5e6c9', textDecoration: 'none' }}>Profile</a></li>
+            </ul>
+          </div>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Resources</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#b5e6c9', fontSize: 15 }}>
+              <li>Adoption Guide</li>
+              <li>Shelter Partners</li>
+              <li>Volunteer</li>
+              <li>Contact Support</li>
+            </ul>
+          </div>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Stay Connected</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#b5e6c9', fontSize: 15 }}>
+              <li>Get updates on new pets</li>
+              <li>Submit your adoption story</li>
+              <li>Newsletter Signup</li>
+            </ul>
+          </div>
+        </div>
+        <div style={{ marginTop: 36, textAlign: 'center', color: '#b5e6c9', fontSize: 14 }}>
+          © {new Date().getFullYear()} Happy Tails. All rights reserved. · Privacy Policy · Terms of Service · Cookie Policy
+        </div>
+      </footer>
+    </div>
+  )
 }
