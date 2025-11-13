@@ -1,4 +1,5 @@
 import React from 'react'
+import applicationService from '../services/applicationService'
 
 /**
  * PetCard
@@ -41,6 +42,10 @@ export default function PetCard({ pet = {} }) {
         <p className="text-sm text-slate-500 mt-1">{breed}</p>
         <p className="text-sm text-slate-400 mt-2">{age} • {size}</p>
 
+        <div className="mt-3">
+          <span className="text-xs uppercase font-medium px-2 py-1 rounded text-slate-700 bg-slate-100">{pet?.raw?.status ?? 'Unknown'}</span>
+        </div>
+
         <div className="mt-4 flex flex-wrap gap-2">
           {tags && tags.length > 0 ? (
             tags.map((t) => (
@@ -55,6 +60,47 @@ export default function PetCard({ pet = {} }) {
             <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full">No tags</span>
           )}
         </div>
+
+        {/* Apply button for adopters when pet is Available */}
+        {(() => {
+          try {
+            const token = JSON.parse(localStorage.getItem('happytails_token'))
+            const isAuthenticated = !!token
+            const status = pet?.raw?.status || ''
+            if (status === 'Available') {
+              // allow parent to override handling via pet.onApply
+              if (typeof pet.onApply === 'function') {
+                return (
+                  <div className="mt-4">
+                    <button onClick={() => pet.onApply(pet)} className="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm">Apply to Adopt</button>
+                  </div>
+                )
+              }
+
+              if (isAuthenticated) {
+                return (
+                  <div className="mt-4">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await applicationService.submitApplication(pet.id, '')
+                          alert('Application submitted. The shelter will review your request.')
+                          window.location.reload()
+                        } catch (e) {
+                          alert(String(e.message || e))
+                        }
+                      }}
+                      className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded bg-emerald-600 text-white text-sm"
+                    >
+                      Apply to Adopt
+                    </button>
+                  </div>
+                )
+              }
+            }
+          } catch (e) { }
+          return null
+        })()}
       </div>
     </article>
   )

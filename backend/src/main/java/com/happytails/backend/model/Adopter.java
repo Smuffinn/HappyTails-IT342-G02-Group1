@@ -37,4 +37,8 @@ public class Adopter {
     @OneToMany(mappedBy = "adopter")
     @JsonManagedReference
     private Set<Application> applications;
+
+    @OneToMany(mappedBy = "adopter")
+    @JsonManagedReference
+    private Set<Pet> adoptedPets;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import authService from '../services/auth'
+import authService, { getUserRoleFromToken } from '../services/auth'
 
 export default function Profile() {
   const [profile, setProfile] = useState(null)
@@ -8,6 +8,7 @@ export default function Profile() {
   const [error, setError] = useState(null)
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({})
+  const [userType, setUserType] = useState(null) // 'adopter' or 'staff'
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -17,6 +18,11 @@ export default function Profile() {
       navigate('/login')
       return
     }
+    
+    // Determine user type from JWT
+    const role = getUserRoleFromToken()
+    setUserType(role === 'staff' ? 'staff' : 'adopter')
+    
     load()
   }, [])
 
@@ -93,37 +99,69 @@ export default function Profile() {
             <strong>Email:</strong> {profile.email}
           </div>
 
-          {!editing ? (
+          {userType === 'staff' ? (
+            // Staff Profile Display
             <div>
-              <div className="mb-2"><strong>Personal info:</strong>
-                <pre className="bg-slate-50 p-2 rounded mt-1">{profile.profilePersonalInfo}</pre>
+              <div className="mb-4">
+                <strong>Shelter:</strong> {profile.shelter?.name || 'No shelter assigned'}
               </div>
-              <div className="mb-2"><strong>Residence details:</strong>
-                <pre className="bg-slate-50 p-2 rounded mt-1">{profile.profileResidenceDetails}</pre>
+              <div className="mb-4">
+                <strong>Staff ID:</strong> {profile.staffId}
               </div>
-              <div className="mb-2"><strong>Pet experience:</strong>
-                <pre className="bg-slate-50 p-2 rounded mt-1">{profile.profilePetExperience}</pre>
-              </div>
-              <div className="flex space-x-2 mt-4">
-                <button className="px-4 py-2 bg-emerald-700 text-white rounded" onClick={() => setEditing(true)}>Edit</button>
-                <button className="px-4 py-2 bg-red-600 text-white rounded" onClick={remove}>Delete account</button>
-              </div>
+              <button className="px-4 py-2 bg-red-600 text-white rounded" onClick={remove}>Delete account</button>
             </div>
           ) : (
+            // Adopter Profile Display
             <div>
-              <label className="block mb-2">Personal info</label>
-              <textarea className="w-full p-2 border rounded" rows={4} value={form.profilePersonalInfo} onChange={e => setForm({...form, profilePersonalInfo: e.target.value})} />
+              {!editing ? (
+                <div>
+                  <div className="mb-2"><strong>Personal info:</strong>
+                    <pre className="bg-slate-50 p-2 rounded mt-1">{profile.profilePersonalInfo}</pre>
+                  </div>
+                  <div className="mb-2"><strong>Residence details:</strong>
+                    <pre className="bg-slate-50 p-2 rounded mt-1">{profile.profileResidenceDetails}</pre>
+                  </div>
+                  <div className="mb-2"><strong>Pet experience:</strong>
+                    <pre className="bg-slate-50 p-2 rounded mt-1">{profile.profilePetExperience}</pre>
+                  </div>
+                  <div className="flex space-x-2 mt-4">
+                    <button className="px-4 py-2 bg-emerald-700 text-white rounded" onClick={() => setEditing(true)}>Edit</button>
+                    <button className="px-4 py-2 bg-red-600 text-white rounded" onClick={remove}>Delete account</button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block mb-2">Personal info</label>
+                  <textarea className="w-full p-2 border rounded" rows={4} value={form.profilePersonalInfo} onChange={e => setForm({...form, profilePersonalInfo: e.target.value})} />
 
-              <label className="block mt-3 mb-2">Residence details</label>
-              <textarea className="w-full p-2 border rounded" rows={3} value={form.profileResidenceDetails} onChange={e => setForm({...form, profileResidenceDetails: e.target.value})} />
+                  <label className="block mt-3 mb-2">Residence details</label>
+                  <textarea className="w-full p-2 border rounded" rows={3} value={form.profileResidenceDetails} onChange={e => setForm({...form, profileResidenceDetails: e.target.value})} />
 
-              <label className="block mt-3 mb-2">Pet experience</label>
-              <textarea className="w-full p-2 border rounded" rows={3} value={form.profilePetExperience} onChange={e => setForm({...form, profilePetExperience: e.target.value})} />
+                  <label className="block mt-3 mb-2">Pet experience</label>
+                  <textarea className="w-full p-2 border rounded" rows={3} value={form.profilePetExperience} onChange={e => setForm({...form, profilePetExperience: e.target.value})} />
 
-              <div className="flex space-x-2 mt-4">
-                <button className="px-4 py-2 bg-emerald-700 text-white rounded" onClick={save}>Save</button>
-                <button className="px-4 py-2 bg-slate-200 rounded" onClick={() => setEditing(false)}>Cancel</button>
-              </div>
+                  <div className="flex space-x-2 mt-4">
+                    <button className="px-4 py-2 bg-emerald-700 text-white rounded" onClick={save}>Save</button>
+                    <button className="px-4 py-2 bg-slate-200 rounded" onClick={() => setEditing(false)}>Cancel</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Adopted pets - only for adopters */}
+              {profile.adoptedPets && profile.adoptedPets.length > 0 && (
+                <div className="mt-6 bg-white rounded shadow p-4">
+                  <h2 className="text-lg font-semibold mb-2">My Adopted Pets</h2>
+                  <ul className="space-y-3">
+                    {profile.adoptedPets.map(p => (
+                      <li key={p.petId} className="p-2 border rounded">
+                        <div className="font-medium">{p.name}</div>
+                        <div className="text-sm text-slate-600">{p.species} • {p.breed}</div>
+                        <div className="text-sm text-slate-500">Status: {p.status}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>
