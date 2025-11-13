@@ -1,6 +1,7 @@
 package com.happytails.backend.controller;
 
 import com.happytails.backend.dto.LoginRequest;
+import com.happytails.backend.dto.LoginResponse;
 import com.happytails.backend.dto.RegisterAdopterRequest;
 import com.happytails.backend.dto.RegisterStaffRequest; // Make sure this is imported
 import com.happytails.backend.model.Adopter;
@@ -29,8 +30,8 @@ public class AuthController {
 
     // Fulfills FR-2 and part of FR-4
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
-        String response = authService.login(request);
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+        LoginResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
 

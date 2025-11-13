@@ -1,6 +1,7 @@
 package com.happytails.backend.service;
 
 import com.happytails.backend.dto.LoginRequest;
+import com.happytails.backend.dto.LoginResponse;
 import com.happytails.backend.dto.RegisterAdopterRequest;
 import com.happytails.backend.dto.RegisterStaffRequest;
 import com.happytails.backend.model.Adopter;
@@ -9,6 +10,7 @@ import com.happytails.backend.model.ShelterStaff;
 import com.happytails.backend.repository.AdopterRepository;
 import com.happytails.backend.repository.ShelterRepository;
 import com.happytails.backend.repository.ShelterStaffRepository;
+import com.happytails.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,9 @@ public class AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // This method is complete and working
     public Adopter registerAdopter(RegisterAdopterRequest request) {
@@ -73,16 +78,17 @@ public class AuthService {
         return shelterStaffRepository.save(staff);
     }
 
-    // UPDATED METHOD: Implements FR-2 (Login)
-    public String login(LoginRequest request) {
+    // UPDATED METHOD: Implements FR-2 (Login) with JWT Token
+    public LoginResponse login(LoginRequest request) {
         // Step 1: Try to find user as an Adopter
         Optional<Adopter> adopterOpt = adopterRepository.findByEmail(request.getEmail());
         if (adopterOpt.isPresent()) {
             Adopter adopter = adopterOpt.get();
             // Step 2: Check password
             if (passwordEncoder.matches(request.getPassword(), adopter.getPassword())) {
-                // In a real app, we would return a JWT token here
-                return "Adopter login successful! (Token generation not yet implemented)";
+                // Generate JWT token
+                String token = jwtUtil.generateToken(adopter.getEmail(), "ADOPTER");
+                return new LoginResponse(token, adopter.getEmail(), "ADOPTER", "Adopter login successful!");
             }
         }
 
@@ -92,8 +98,9 @@ public class AuthService {
             ShelterStaff staff = staffOpt.get();
             // Step 4: Check password
             if (passwordEncoder.matches(request.getPassword(), staff.getPassword())) {
-                // In a real app, we would return a JWT token here
-                return "Shelter Staff login successful! (Token generation not yet implemented)";
+                // Generate JWT token
+                String token = jwtUtil.generateToken(staff.getEmail(), "STAFF");
+                return new LoginResponse(token, staff.getEmail(), "STAFF", "Shelter Staff login successful!");
             }
         }
 
