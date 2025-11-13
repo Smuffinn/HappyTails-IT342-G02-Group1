@@ -16,6 +16,7 @@ import com.happytails.backend.repository.ShelterStaffRepository;
 import com.happytails.backend.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.happytails.backend.security.JwtUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -37,6 +38,7 @@ public class AuthService {
 
     @Autowired
     private JwtUtil jwtUtil;
+    private JwtUtils jwtUtils;
 
     // This method is complete and working
     public Adopter registerAdopter(RegisterAdopterRequest request) {
@@ -92,6 +94,9 @@ public class AuthService {
                 // Generate JWT token
                 String token = jwtUtil.generateToken(adopter.getEmail(), "ADOPTER");
                 return new LoginResponse(token, adopter.getEmail(), "ADOPTER", "Adopter login successful!");
+                // Generate JWT token for the adopter with role
+                java.util.List<String> roles = java.util.List.of("ROLE_ADOPTER");
+                return jwtUtils.generateJwtToken(adopter.getEmail(), roles);
             }
         }
 
@@ -104,6 +109,9 @@ public class AuthService {
                 // Generate JWT token
                 String token = jwtUtil.generateToken(staff.getEmail(), "STAFF");
                 return new LoginResponse(token, staff.getEmail(), "STAFF", "Shelter Staff login successful!");
+                // Generate JWT token for the staff with role
+                java.util.List<String> roles = java.util.List.of("ROLE_STAFF");
+                return jwtUtils.generateJwtToken(staff.getEmail(), roles);
             }
         }
 
