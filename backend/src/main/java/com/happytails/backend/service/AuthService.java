@@ -11,6 +11,7 @@ import com.happytails.backend.repository.ShelterRepository;
 import com.happytails.backend.repository.ShelterStaffRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.happytails.backend.security.JwtUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -29,6 +30,9 @@ public class AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     // This method is complete and working
     public Adopter registerAdopter(RegisterAdopterRequest request) {
@@ -81,8 +85,8 @@ public class AuthService {
             Adopter adopter = adopterOpt.get();
             // Step 2: Check password
             if (passwordEncoder.matches(request.getPassword(), adopter.getPassword())) {
-                // In a real app, we would return a JWT token here
-                return "Adopter login successful! (Token generation not yet implemented)";
+                // Generate JWT token for the adopter
+                return jwtUtils.generateJwtToken(adopter.getEmail());
             }
         }
 
@@ -92,8 +96,8 @@ public class AuthService {
             ShelterStaff staff = staffOpt.get();
             // Step 4: Check password
             if (passwordEncoder.matches(request.getPassword(), staff.getPassword())) {
-                // In a real app, we would return a JWT token here
-                return "Shelter Staff login successful! (Token generation not yet implemented)";
+                // Generate JWT token for the staff
+                return jwtUtils.generateJwtToken(staff.getEmail());
             }
         }
 
