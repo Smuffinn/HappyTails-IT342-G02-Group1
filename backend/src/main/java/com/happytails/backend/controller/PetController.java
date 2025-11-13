@@ -1,7 +1,6 @@
 package com.happytails.backend.controller;
 
 import com.happytails.backend.model.Pet;
-import com.happytails.backend.repository.PetRepository;
 import com.happytails.backend.service.PetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

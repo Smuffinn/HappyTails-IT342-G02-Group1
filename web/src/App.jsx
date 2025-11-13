@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { Routes, Route, Link } from 'react-router-dom'
 import DiscoverPage from './pages/DiscoverPage'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -89,7 +89,7 @@ function ProfileMenu() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <>
       <Header />
       <Routes>
         <Route path="/" element={<DiscoverPage />} />
@@ -98,6 +98,6 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/applications" element={<Applications />} />
       </Routes>
-    </BrowserRouter>
+    </>
   )
 }
