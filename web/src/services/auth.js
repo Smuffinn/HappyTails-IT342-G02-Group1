@@ -21,6 +21,16 @@ export const authService = {
       throw err
     }
   },
+
+  registerStaff: async (payload) => {
+    try {
+      const res = await api.post('/auth/register-staff', payload)
+      return res.data
+    } catch (err) {
+      if (err.response && err.response.data) throw err.response.data
+      throw err
+    }
+  },
 }
 
 export default authService

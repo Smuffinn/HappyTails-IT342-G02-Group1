@@ -23,7 +23,7 @@ public class AuthController {
 
     // Fulfills FR-1
     @PostMapping("/register-adopter")
-    public ResponseEntity<Adopter> registerAdopter(@RequestBody RegisterAdopterRequest request) {
+    public ResponseEntity<Adopter> registerAdopter(@jakarta.validation.Valid @RequestBody RegisterAdopterRequest request) {
         Adopter newAdopter = authService.registerAdopter(request);
         return ResponseEntity.ok(newAdopter);
     }
@@ -37,7 +37,7 @@ public class AuthController {
 
     // Fulfills part of FR-4
     @PostMapping("/register-staff")
-    public ResponseEntity<ShelterStaff> registerStaff(@RequestBody RegisterStaffRequest request) {
+    public ResponseEntity<ShelterStaff> registerStaff(@jakarta.validation.Valid @RequestBody RegisterStaffRequest request) {
         ShelterStaff newStaff = authService.registerStaff(request);
         return ResponseEntity.ok(newStaff);
     }
