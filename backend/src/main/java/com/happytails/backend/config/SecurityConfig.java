@@ -36,6 +36,7 @@ public class SecurityConfig {
             // Allow unauthenticated access to auth endpoints and pet listings
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers("/api/auth/register-staff").permitAll()
+            .requestMatchers("/api/shelters/**").permitAll()
             .requestMatchers("/api/pets/**").permitAll()
             .anyRequest().authenticated()
         );

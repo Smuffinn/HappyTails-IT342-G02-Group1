@@ -85,8 +85,9 @@ public class AuthService {
             Adopter adopter = adopterOpt.get();
             // Step 2: Check password
             if (passwordEncoder.matches(request.getPassword(), adopter.getPassword())) {
-                // Generate JWT token for the adopter
-                return jwtUtils.generateJwtToken(adopter.getEmail());
+                // Generate JWT token for the adopter with role
+                java.util.List<String> roles = java.util.List.of("ROLE_ADOPTER");
+                return jwtUtils.generateJwtToken(adopter.getEmail(), roles);
             }
         }
 
@@ -96,8 +97,9 @@ public class AuthService {
             ShelterStaff staff = staffOpt.get();
             // Step 4: Check password
             if (passwordEncoder.matches(request.getPassword(), staff.getPassword())) {
-                // Generate JWT token for the staff
-                return jwtUtils.generateJwtToken(staff.getEmail());
+                // Generate JWT token for the staff with role
+                java.util.List<String> roles = java.util.List.of("ROLE_STAFF");
+                return jwtUtils.generateJwtToken(staff.getEmail(), roles);
             }
         }
 
