@@ -5,7 +5,7 @@
 /* Project-specific base styles (use Tailwind where possible) */
 @layer base {
   :root {
-    --app-bg: #fdf6f2; /* soft cream */
+    --app-bg: #fdf6f2; /* soft cream #fdf6f2;  soft green accents #CBFECB */ 
     --panel-bg: #ffffff;
     --muted: #6b7280;
   }

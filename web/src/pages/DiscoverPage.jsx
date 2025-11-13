@@ -11,7 +11,7 @@ import applicationService from '../services/applicationService'
 		age: '2 years',
 		size: 'large',
 		species: 'Dog',
-		imageUrl: '/src/assets/pet1.svg',
+		imageUrl: '/src/assets/pet1.jpg',
 		tags: ['Friendly', 'Playful'],
 	},
 	{
@@ -21,7 +21,7 @@ import applicationService from '../services/applicationService'
 		age: '3 years',
 		size: 'medium',
 		species: 'Cat',
-		imageUrl: '/src/assets/pet2.svg',
+		imageUrl: '/src/assets/pet2.jpg',
 		tags: ['Independent', 'Calm'],
 	},
 	{
@@ -31,7 +31,7 @@ import applicationService from '../services/applicationService'
 		age: '4 years',
 		size: 'medium',
 		species: 'Dog',
-		imageUrl: '/src/assets/pet3.svg',
+		imageUrl: '/src/assets/pet3.jpg',
 		tags: ['Curious', 'Friendly'],
 	},
 	{
@@ -41,7 +41,7 @@ import applicationService from '../services/applicationService'
 		age: '1 year',
 		size: 'small',
 		species: 'Cat',
-		imageUrl: '/src/assets/pet4.svg',
+		imageUrl: '/src/assets/pet4.jpg',
 		tags: ['Vocal', 'Social'],
 	},
 	{
@@ -51,7 +51,7 @@ import applicationService from '../services/applicationService'
 		age: '3 years',
 		size: 'small',
 		species: 'Dog',
-		imageUrl: '/src/assets/pet5.svg',
+		imageUrl: '/src/assets/pet5.jpg',
 		tags: ['Affectionate', 'Playful'],
 	},
 	{
@@ -61,7 +61,7 @@ import applicationService from '../services/applicationService'
 		age: '5 years',
 		size: 'large',
 		species: 'Dog',
-		imageUrl: '/src/assets/pet6.svg',
+		imageUrl: '/src/assets/pet6.jpg',
 		tags: ['Loyal', 'Calm'],
 	},
 	{
@@ -71,7 +71,7 @@ import applicationService from '../services/applicationService'
 		age: '2 years',
 		size: 'small',
 		species: 'Rabbit',
-		imageUrl: '/src/assets/pet7.svg',
+		imageUrl: '/src/assets/pet7.jpg',
 		tags: ['Gentle', 'Quiet'],
 	},
 	{
@@ -81,9 +81,10 @@ import applicationService from '../services/applicationService'
 		age: '1 year',
 		size: 'small',
 		species: 'Bird',
-		imageUrl: '/src/assets/pet8.svg',
+		imageUrl: '/src/assets/pet8.jpg',
 		tags: ['Cheerful', 'Active'],
 	},
+
 ]
 
 export default function DiscoverPage() {
