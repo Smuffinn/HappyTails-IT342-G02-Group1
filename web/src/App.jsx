@@ -14,6 +14,8 @@ export default function App() {
       <Route path="/discover" element={<DiscoverPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/applications" element={<Applications />} />
     </Routes>
   )
 }

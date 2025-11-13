@@ -120,7 +120,7 @@ export const authService = {
       }
       
       // Default to adopter endpoint
-      const res = await api.delete('/adopters')
+      const res = await api.delete('/adopters/me')
       return res.data
     } catch (err) {
       const payload = err.response && err.response.data ? err.response.data : null
