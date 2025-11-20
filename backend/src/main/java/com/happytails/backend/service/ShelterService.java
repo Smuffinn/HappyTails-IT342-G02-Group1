@@ -54,6 +54,15 @@ public class ShelterService {
         return shelterRepository.save(shelter);
     }
 
+    // Create a new shelter with specific fields
+    public Shelter createShelter(String name, String location, String contactInfo) {
+        Shelter shelter = new Shelter();
+        shelter.setName(name);
+        shelter.setLocation(location);
+        shelter.setContactInfo(contactInfo);
+        return shelterRepository.save(shelter);
+    }
+
     // Delete shelter (for admin purposes)
     public void deleteShelter(Long shelterId) {
         Shelter shelter = getShelterById(shelterId);

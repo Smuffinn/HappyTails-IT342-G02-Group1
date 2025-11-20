@@ -9,6 +9,9 @@ export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [shelterId, setShelterId] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [shelters, setShelters] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -29,6 +32,8 @@ export default function Register() {
       if (!shelterId || Number.isNaN(numericShelterId) || numericShelterId <= 0) {
         nextFieldErrors.shelterId = 'Shelter is required for staff accounts.'
       }
+      if (!firstName.trim()) nextFieldErrors.firstName = 'First name is required.'
+      if (!lastName.trim()) nextFieldErrors.lastName = 'Last name is required.'
     }
     setFieldErrors(nextFieldErrors)
     return Object.keys(nextFieldErrors).length === 0
@@ -45,7 +50,14 @@ export default function Register() {
         await registerAdopter({ email: email.trim(), password: password.trim() })
         setSuccess('Adopter account created. You can now log in.')
       } else {
-        const payload = { email: email.trim(), password: password.trim(), shelterId: Number(shelterId) }
+        const payload = { 
+          email: email.trim(), 
+          password: password.trim(), 
+          shelterId: Number(shelterId),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          phoneNumber: phoneNumber.trim()
+        }
         await registerStaff(payload)
         setSuccess('Shelter staff account created. You can now log in.')
       }
@@ -182,38 +194,75 @@ export default function Register() {
               {fieldErrors.password && <span style={{ color: '#d64545', fontSize: '0.85rem' }}>{fieldErrors.password}</span>}
             </label>
             {isStaffMode && (
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                Shelter
-                {shelters && shelters.length > 0 ? (
-                  <select
-                    value={shelterId}
-                    onChange={e => setShelterId(e.target.value)}
-                    required
-                    style={{ borderRadius: 10, border: '1px solid #d6e2d6', padding: '12px 16px', fontSize: '1rem', background: '#fff', fontFamily: 'inherit' }}
-                  >
-                    <option value="">Select your shelter</option>
-                    {shelters.map((shelter) => {
-                      const value = shelter.shelterId ?? shelter.id
-                      const label = shelter.name ?? shelter.shelterName ?? `Shelter ${value}`
-                      return (
-                        <option key={value ?? label} value={value ?? ''}>
-                          {label}
-                        </option>
-                      )
-                    })}
-                  </select>
-                ) : (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    First Name
+                    <input
+                      type="text"
+                      required
+                      value={firstName}
+                      onChange={e => setFirstName(e.target.value)}
+                      style={{ borderRadius: 10, border: '1px solid #d6e2d6', padding: '12px 16px', fontSize: '1rem', background: '#fff', fontFamily: 'inherit' }}
+                    />
+                    {fieldErrors.firstName && <span style={{ color: '#d64545', fontSize: '0.85rem' }}>{fieldErrors.firstName}</span>}
+                  </label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    Last Name
+                    <input
+                      type="text"
+                      required
+                      value={lastName}
+                      onChange={e => setLastName(e.target.value)}
+                      style={{ borderRadius: 10, border: '1px solid #d6e2d6', padding: '12px 16px', fontSize: '1rem', background: '#fff', fontFamily: 'inherit' }}
+                    />
+                    {fieldErrors.lastName && <span style={{ color: '#d64545', fontSize: '0.85rem' }}>{fieldErrors.lastName}</span>}
+                  </label>
+                </div>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  Phone Number
                   <input
-                    type="number"
-                    value={shelterId}
-                    onChange={e => setShelterId(e.target.value)}
-                    placeholder="Enter shelter id (ask admin)"
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    placeholder="Optional"
                     style={{ borderRadius: 10, border: '1px solid #d6e2d6', padding: '12px 16px', fontSize: '1rem', background: '#fff', fontFamily: 'inherit' }}
                   />
-                )}
-                {fieldErrors.shelterId && <span style={{ color: '#d64545', fontSize: '0.85rem' }}>{fieldErrors.shelterId}</span>}
-                <span style={{ fontSize: '0.85rem', color: '#5e7263' }}>If you don't have a shelter id, ask your shelter administrator.</span>
-              </label>
+                  {fieldErrors.phoneNumber && <span style={{ color: '#d64545', fontSize: '0.85rem' }}>{fieldErrors.phoneNumber}</span>}
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  Shelter
+                  {shelters && shelters.length > 0 ? (
+                    <select
+                      value={shelterId}
+                      onChange={e => setShelterId(e.target.value)}
+                      required
+                      style={{ borderRadius: 10, border: '1px solid #d6e2d6', padding: '12px 16px', fontSize: '1rem', background: '#fff', fontFamily: 'inherit' }}
+                    >
+                      <option value="">Select your shelter</option>
+                      {shelters.map((shelter) => {
+                        const value = shelter.shelterId ?? shelter.id
+                        const label = shelter.name ?? shelter.shelterName ?? `Shelter ${value}`
+                        return (
+                          <option key={value ?? label} value={value ?? ''}>
+                            {label}
+                          </option>
+                        )
+                      })}
+                    </select>
+                  ) : (
+                    <input
+                      type="number"
+                      value={shelterId}
+                      onChange={e => setShelterId(e.target.value)}
+                      placeholder="Enter shelter id (ask admin)"
+                      style={{ borderRadius: 10, border: '1px solid #d6e2d6', padding: '12px 16px', fontSize: '1rem', background: '#fff', fontFamily: 'inherit' }}
+                    />
+                  )}
+                  {fieldErrors.shelterId && <span style={{ color: '#d64545', fontSize: '0.85rem' }}>{fieldErrors.shelterId}</span>}
+                  <span style={{ fontSize: '0.85rem', color: '#5e7263' }}>If you don't have a shelter id, ask your shelter administrator.</span>
+                </label>
+              </>
             )}
             {error && <div style={{ color: '#d64545', fontSize: '0.95rem' }}>{error}</div>}
             {success && <div style={{ color: '#78c977', fontSize: '0.95rem' }}>{success}</div>}

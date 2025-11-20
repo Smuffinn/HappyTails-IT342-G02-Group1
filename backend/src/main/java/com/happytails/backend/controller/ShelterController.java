@@ -29,6 +29,17 @@ public class ShelterController {
         return ResponseEntity.ok(shelterService.getAllShelters());
     }
 
+    // Create new shelter
+    @PostMapping
+    public ResponseEntity<Shelter> createShelter(@Valid @RequestBody UpdateShelterRequest request) {
+        Shelter newShelter = shelterService.createShelter(
+                request.getName(),
+                request.getLocation(),
+                request.getContactInfo()
+        );
+        return ResponseEntity.ok(newShelter);
+    }
+
     // FR-5: Update shelter profile (only for staff of that shelter)
     @PutMapping("/{id}")
     public ResponseEntity<?> updateShelter(

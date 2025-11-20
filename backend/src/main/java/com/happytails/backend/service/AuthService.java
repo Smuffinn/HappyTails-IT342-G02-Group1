@@ -72,6 +72,9 @@ public class AuthService {
         ShelterStaff staff = new ShelterStaff();
         staff.setEmail(request.getEmail());
         staff.setShelter(shelter); // Link the staff to the shelter
+        staff.setFirstName(request.getFirstName());
+        staff.setLastName(request.getLastName());
+        staff.setPhoneNumber(request.getPhoneNumber());
 
         // Step 3: Hash the password
         String hashedPassword = passwordEncoder.encode(request.getPassword());
