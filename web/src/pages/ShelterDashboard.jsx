@@ -17,18 +17,16 @@ export default function ShelterDashboard() {
   });
 
   useEffect(() => {
-    // Temporarily disabled authentication check for UI preview
-    // if (!isStaff) {
-    //   navigate('/shelter');
-    //   return;
-    // }
+    if (!isStaff) {
+      navigate('/shelter');
+      return;
+    }
     loadShelterData();
   }, [isStaff, navigate]);
 
   const loadShelterData = async () => {
     try {
       setLoading(true);
-      // Try to fetch real data
       const data = await shelterService.getMyShelter();
       setShelter(data);
       setEditForm({
@@ -38,23 +36,8 @@ export default function ShelterDashboard() {
       });
       setError(null);
     } catch (err) {
-      // For demo purposes, show mock data instead of error
-      console.log('Using mock data for preview');
-      const mockData = {
-        shelterId: 1,
-        name: 'Happy Paws Shelter',
-        location: 'Cebu City, Philippines',
-        contactInfo: 'contact@happypaws.com',
-        pets: [],
-        staff: []
-      };
-      setShelter(mockData);
-      setEditForm({
-        name: mockData.name,
-        location: mockData.location,
-        contactInfo: mockData.contactInfo
-      });
-      setError(null); // Hide error for demo
+      setError('Failed to load shelter data: ' + (err.response?.data?.message || err.message));
+      console.error('Error loading shelter:', err);
     } finally {
       setLoading(false);
     }
@@ -80,10 +63,9 @@ export default function ShelterDashboard() {
     }));
   };
 
-  // Temporarily disabled for UI preview
-  // if (!isStaff) {
-  //   return null;
-  // }
+  if (!isStaff) {
+    return null;
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
