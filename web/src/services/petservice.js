@@ -2,6 +2,16 @@ import api from './api';
 
 // This file contains functions that call specific backend endpoints
 
+const extractMessage = (err) => {
+  const payload = err?.response?.data
+  if (payload) {
+    if (typeof payload === 'string') return payload
+    if (payload.error) return payload.error
+    if (payload.message) return payload.message
+  }
+  return err?.message || String(err)
+}
+
 export const petService = {
   /**
    * Fetches all pets from the backend
@@ -11,8 +21,13 @@ export const petService = {
     try {
       const response = await api.get('/pets');
       // Normalize backend pet shape to UI-friendly object
-      const raw = response.data || [];
+      const raw = response.data;
+      if (!Array.isArray(raw)) {
+        return [];
+      }
       return raw.map((p) => {
+        const shelterId = p.shelterId ?? p.shelter?.shelterId ?? null
+        const shelterName = p.shelter?.name ?? p.shelterName ?? null
         // backend uses petId, photosJson (json string), temperament (comma list)
         let imageUrl = '';
         try {
@@ -32,11 +47,17 @@ export const petService = {
           breed: p.breed,
           age: p.age,
           size: p.size ? String(p.size).toLowerCase() : '',
+          species: p.species ?? p?.species ?? null,
+          gender: p.gender ? String(p.gender).toLowerCase() : '',
+          status: p.status ?? p?.status ?? null,
+          shelterId,
+          shelterName,
           imageUrl,
           tags,
           raw: p,
         }
       })
+
     } catch (error) {
       console.error('Error fetching all pets:', error);
       throw error; // Re-throw to be caught by the component
@@ -52,6 +73,8 @@ export const petService = {
       const response = await api.get(`/pets/${id}`);
       const p = response.data;
       if (!p) return null;
+      const shelterId = p.shelterId ?? p.shelter?.shelterId ?? null
+      const shelterName = p.shelter?.name ?? p.shelterName ?? null
       let imageUrl = '';
       try {
         if (p.photosJson) {
@@ -68,6 +91,11 @@ export const petService = {
         breed: p.breed,
         age: p.age,
         size: p.size ? String(p.size).toLowerCase() : '',
+        species: p.species ?? null,
+        gender: p.gender ? String(p.gender).toLowerCase() : '',
+        status: p.status ?? null,
+        shelterId,
+        shelterName,
         imageUrl,
         tags,
         raw: p,
@@ -99,8 +127,11 @@ export const petService = {
       if (filters.maxAge) params.append('maxAge', filters.maxAge);
 
       const response = await api.get(`/pets/search?${params.toString()}`);
-      const raw = response.data || [];
-      
+      const raw = response.data;
+      if (!Array.isArray(raw)) {
+        return [];
+      }
+
       return raw.map((p) => {
         let imageUrl = '';
         try {
@@ -121,8 +152,9 @@ export const petService = {
           age: p.age,
           size: p.size ? String(p.size).toLowerCase() : '',
           species: p.species,
-          gender: p.gender,
+          gender: p.gender ? String(p.gender).toLowerCase() : '',
           temperament: p.temperament,
+          status: p.status ?? null,
           imageUrl,
           tags,
           raw: p,
@@ -134,5 +166,30 @@ export const petService = {
     }
   },
 
-  // We will add createPet, updatePet, etc. here later
+  createPet: async (payload) => {
+    try {
+      const res = await api.post('/pets', payload)
+      return res.data
+    } catch (err) {
+      throw new Error(extractMessage(err))
+    }
+  },
+
+  updatePet: async (petId, payload) => {
+    try {
+      const res = await api.put(`/pets/${petId}`, payload)
+      return res.data
+    } catch (err) {
+      throw new Error(extractMessage(err))
+    }
+  },
+
+  updatePetStatus: async (petId, status) => {
+    try {
+      const res = await api.patch(`/pets/${petId}/status`, { status })
+      return res.data
+    } catch (err) {
+      throw new Error(extractMessage(err))
+    }
+  },
 };

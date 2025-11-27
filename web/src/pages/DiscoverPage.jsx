@@ -1,6 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
-import { useAuth } from '../context/AuthContext.jsx'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useMemo, useState } from 'react'
 import { petService } from '../services/petservice'
 import PetQuickView from '../modules/pets/PetQuickView.jsx'
 import pet1 from '../assets/pet1.jpg'
@@ -20,6 +18,7 @@ const mockPets = [
     age: '2 years',
     size: 'large',
     species: 'Dog',
+    gender: 'Female',
     imageUrl: pet1,
     tags: ['Friendly', 'Playful'],
   },
@@ -30,6 +29,7 @@ const mockPets = [
     age: '3 years',
     size: 'medium',
     species: 'Cat',
+    gender: 'Female',
     imageUrl: pet3,
     tags: ['Independent', 'Calm'],
   },
@@ -40,6 +40,7 @@ const mockPets = [
     age: '4 years',
     size: 'medium',
     species: 'Dog',
+    gender: 'Male',
     imageUrl: pet2,
     tags: ['Curious', 'Friendly'],
   },
@@ -50,6 +51,7 @@ const mockPets = [
     age: '1 year',
     size: 'small',
     species: 'Cat',
+    gender: 'Female',
     imageUrl: pet4,
     tags: ['Vocal', 'Social'],
   },
@@ -60,6 +62,7 @@ const mockPets = [
     age: '3 years',
     size: 'small',
     species: 'Dog',
+    gender: 'Female',
     imageUrl: pet5,
     tags: ['Affectionate', 'Playful'],
   },
@@ -70,6 +73,7 @@ const mockPets = [
     age: '5 years',
     size: 'large',
     species: 'Dog',
+    gender: 'Male',
     imageUrl: pet6,
     tags: ['Loyal', 'Calm'],
   },
@@ -80,6 +84,7 @@ const mockPets = [
     age: '2 years',
     size: 'small',
     species: 'Rabbit',
+    gender: 'Male',
     imageUrl: pet7,
     tags: ['Gentle', 'Quiet'],
   },
@@ -90,23 +95,24 @@ const mockPets = [
     age: '1 year',
     size: 'small',
     species: 'Bird',
+    gender: 'Unknown',
     imageUrl: pet8,
     tags: ['Cheerful', 'Active'],
   },
 ]
 
 export default function DiscoverPage() {
-  const navigate = useNavigate()
-  const { isAuthenticated, isStaff, email, logout } = useAuth()
   const [pets, setPets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [filterOpen, setFilterOpen] = useState(false)
   const [quickViewPet, setQuickViewPet] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedSpecies, setSelectedSpecies] = useState(new Set())
-  const [selectedSizes, setSelectedSizes] = useState(new Set())
-  const [selectedLifeStages, setSelectedLifeStages] = useState(new Set())
+
+  const [filterName, setFilterName] = useState('')
+  const [filterSpecies, setFilterSpecies] = useState('')
+  const [filterBreed, setFilterBreed] = useState('')
+  const [filterAge, setFilterAge] = useState('')
+  const [filterSize, setFilterSize] = useState('')
+  const [filterGender, setFilterGender] = useState('')
 
   useEffect(() => {
     let mounted = true
@@ -123,195 +129,204 @@ export default function DiscoverPage() {
       }
     }
     loadPets()
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [])
 
   const sourcePets = useMemo(() => (pets.length ? pets : mockPets), [pets])
 
-  const speciesOptions = useMemo(() => {
-    const unique = new Set()
-    sourcePets.forEach((pet) => {
-      if (pet?.species) unique.add(pet.species)
-    })
-    return Array.from(unique)
-  }, [sourcePets])
+  const toTitleCase = (value) => value.replace(/\w+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
 
-  const sizeOptions = useMemo(() => {
-    const unique = new Set()
-    sourcePets.forEach((pet) => {
-      if (pet?.size) unique.add(pet.size)
-    })
-    return Array.from(unique)
-  }, [sourcePets])
-
-  const deriveLifeStage = useCallback((ageLabel) => {
-    if (!ageLabel) return 'Adult'
-    const match = String(ageLabel).match(/(\d+(?:\.\d+)?)/)
-    const value = match ? parseFloat(match[1]) : null
-    if (value === null || Number.isNaN(value)) return 'Adult'
-    if (value < 1) return 'Puppy'
-    if (value >= 1 && value < 3) return 'Juvenile'
-    if (value >= 3 && value < 7) return 'Adult'
-    return 'Senior'
-  }, [])
-
-  const lifeStageOptions = useMemo(() => {
-    const unique = new Set()
-    sourcePets.forEach((pet) => unique.add(deriveLifeStage(pet?.age)))
-    return Array.from(unique)
-  }, [sourcePets, deriveLifeStage])
-
-  const toggleSetValue = (setter) => (value) => {
-    setter((prev) => {
-      const next = new Set(prev)
-      if (next.has(value)) {
-        next.delete(value)
-      } else {
-        next.add(value)
+  const buildOptions = useMemo(() => {
+    const makeOptions = (values, formatter, fallbackValues = []) => {
+      const map = new Map()
+      const ingest = (collection) => {
+        collection.forEach((val) => {
+          if (!val) return
+          const raw = String(val).trim()
+          if (!raw) return
+          const key = raw.toLowerCase()
+          if (!map.has(key)) {
+            map.set(key, formatter ? formatter(raw) : raw)
+          }
+        })
       }
-      return next
-    })
-  }
+      ingest(fallbackValues)
+      ingest(values)
+      return Array.from(map.entries()).map(([value, label]) => ({ value, label }))
+    }
 
-  const clearFilters = useCallback(() => {
-    setSelectedSpecies(new Set())
-    setSelectedSizes(new Set())
-    setSelectedLifeStages(new Set())
-    setSearchTerm('')
-  }, [])
+    const species = makeOptions(
+      sourcePets.map((pet) => pet?.species || pet?.raw?.species),
+      (raw) => toTitleCase(raw),
+    )
+    const breeds = makeOptions(
+      sourcePets.map((pet) => pet?.breed || pet?.raw?.breed),
+      (raw) => toTitleCase(raw),
+    )
+    const ages = makeOptions(sourcePets.map((pet) => pet?.age || pet?.raw?.age))
+    const sizes = makeOptions(
+      sourcePets.map((pet) => pet?.size || pet?.raw?.size),
+      (raw) => toTitleCase(raw),
+      ['Small', 'Medium', 'Large'],
+    )
+    const genders = makeOptions(
+      sourcePets.map((pet) => pet?.gender || pet?.raw?.gender),
+      (raw) => toTitleCase(raw),
+      ['Male', 'Female', 'Unknown'],
+    )
+
+    return {
+      species,
+      breeds,
+      ages,
+      sizes,
+      genders,
+    }
+  }, [sourcePets])
 
   const filteredPets = useMemo(() => {
+    const name = filterName.trim().toLowerCase()
+    const species = filterSpecies.trim().toLowerCase()
+    const breed = filterBreed.trim().toLowerCase()
+    const age = filterAge.trim().toLowerCase()
+    const size = filterSize.trim().toLowerCase()
+    const gender = filterGender.trim().toLowerCase()
+
     return sourcePets.filter((pet) => {
-      const matchesSearch = (() => {
-        if (!searchTerm.trim()) return true
-        const norm = searchTerm.trim().toLowerCase()
-        return (
-          (pet.name && pet.name.toLowerCase().includes(norm)) ||
-          (pet.breed && pet.breed.toLowerCase().includes(norm)) ||
-          (pet.species && pet.species.toLowerCase().includes(norm))
-        )
-      })()
+      const petName = (pet?.name || '').toLowerCase()
+      const petSpecies = (pet?.species || pet?.raw?.species || '').toLowerCase()
+      const petBreed = (pet?.breed || pet?.raw?.breed || '').toLowerCase()
+      const petAge = (pet?.age || pet?.raw?.age || '').toLowerCase()
+      const petSize = (pet?.size || pet?.raw?.size || '').toLowerCase()
+      const petGender = (pet?.gender || pet?.raw?.gender || '').toLowerCase()
 
-      const matchesSpecies = selectedSpecies.size === 0 || (pet.species && selectedSpecies.has(pet.species))
+      if (name && !petName.includes(name)) return false
+      if (species && !petSpecies.includes(species)) return false
+      if (breed && !petBreed.includes(breed)) return false
+      if (age && !petAge.includes(age)) return false
+      if (size && !petSize.includes(size)) return false
+      if (gender && !petGender.includes(gender)) return false
 
-      const matchesSize = selectedSizes.size === 0 || (pet.size && selectedSizes.has(pet.size))
-
-      const stage = deriveLifeStage(pet.age)
-      const matchesLifeStage = selectedLifeStages.size === 0 || selectedLifeStages.has(stage)
-
-      return matchesSearch && matchesSpecies && matchesSize && matchesLifeStage
+      return true
     })
-  }, [sourcePets, searchTerm, selectedSpecies, selectedSizes, selectedLifeStages, deriveLifeStage])
+  }, [sourcePets, filterName, filterSpecies, filterBreed, filterAge, filterSize, filterGender])
 
-  const handleSearchSubmit = useCallback((event) => {
-    event.preventDefault()
-  }, [])
+  const clearFilters = () => {
+    setFilterName('')
+    setFilterSpecies('')
+    setFilterBreed('')
+    setFilterAge('')
+    setFilterSize('')
+    setFilterGender('')
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
-      {/* Header Bar */}
-      <header style={{ background: '#f8f4ed', padding: '18px 0', borderBottom: '1px solid #e0e4d6', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-            <span style={{ fontWeight: 700, fontSize: 20, color: '#4f8a3a' }}>Happy Tails</span>
-            <span style={{ color: '#5e7263', fontSize: 13 }}>Find Your Forever Friend</span>
-          </button>
-          <nav style={{ display: 'flex', gap: 32, fontSize: 15, alignItems: 'center' }}>
-            <button type="button" onClick={() => navigate('/discover')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Discover Pets</button>
-            <button type="button" onClick={() => navigate('/quiz')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Take Quiz</button>
-            {isStaff ? (
-              <button type="button" onClick={() => navigate('/shelter/pets')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Shelter Dashboard</button>
-            ) : (
-              <button type="button" onClick={() => navigate('/profile')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Profile</button>
-            )}
-            {isAuthenticated ? (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 16 }}>
-                <span style={{ fontSize: '0.9rem', color: '#5e7263' }}>{email}</span>
-                <button type="button" onClick={logout} style={{ background: 'none', border: '1px solid rgba(79, 138, 58, 0.3)', color: '#4f8a3a', fontWeight: 600, cursor: 'pointer', borderRadius: 999, padding: '8px 18px' }}>Logout</button>
-              </div>
-            ) : (
-              <button type="button" onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', color: '#4f8a3a', fontWeight: 600, cursor: 'pointer' }}>Login</button>
-            )}
-          </nav>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 32px 0 32px', display: 'grid', gap: 24 }}>
+        <div>
+          <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#253b2f', margin: 0 }}>Discover Pets</h1>
+          <p style={{ color: '#5e7263', margin: '8px 0 0', fontSize: 16 }}>Browse adoptable pets waiting for their forever home.</p>
         </div>
-      </header>
 
-      {/* Page Title and Filter Bar */}
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 0 0 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, padding: '0 32px' }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#253b2f', margin: 0 }}>Discover Pets</h1>
-            <p style={{ color: '#5e7263', margin: 0, fontSize: 16 }}>Browse adoptable pets waiting for their forever home.</p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              style={{ background: '#fff', border: '1px solid #e0e4d6', borderRadius: 999, padding: '8px 22px', color: '#253b2f', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}
-              onClick={() => setFilterOpen(true)}
-            >
-              Filter
-            </button>
-          </div>
-          {filterOpen && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.12)', zIndex: 1001 }} onClick={() => setFilterOpen(false)}>
-              <div style={{ position: 'absolute', top: 90, right: 80, background: '#fff', borderRadius: 18, boxShadow: '0 8px 32px rgba(84,135,104,0.16)', padding: 32, minWidth: 340, minHeight: 340, zIndex: 1002, display: 'flex', flexDirection: 'column', gap: 24 }} onClick={e => e.stopPropagation()}>
-                <button onClick={() => setFilterOpen(false)} style={{ position: 'absolute', top: 12, right: 16, background: 'none', border: 'none', fontSize: 22, color: '#5e7263', cursor: 'pointer' }}>&times;</button>
-                <h3 style={{ margin: 0, color: '#253b2f', fontWeight: 700, fontSize: 17, marginBottom: 18 }}>Filters</h3>
-                <FilterSection
-                  label="Species"
-                  options={speciesOptions}
-                  selected={selectedSpecies}
-                  onToggle={toggleSetValue(setSelectedSpecies)}
-                />
-                <FilterSection
-                  label="Life Stage"
-                  options={lifeStageOptions}
-                  selected={selectedLifeStages}
-                  onToggle={toggleSetValue(setSelectedLifeStages)}
-                />
-                <FilterSection
-                  label="Size"
-                  options={sizeOptions}
-                  selected={selectedSizes}
-                  onToggle={toggleSetValue(setSelectedSizes)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 12 }}>
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="btn btn-outline"
-                    style={{ padding: '8px 20px', fontSize: 14 }}
-                  >
-                    Clear filters
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilterOpen(false)}
-                    className="btn btn-primary"
-                    style={{ padding: '10px 24px', fontSize: 14 }}
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        {/* Search Bar */}
         <form
-          style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px rgba(84,135,104,0.04)', padding: '14px 24px', margin: '0 32px 24px 32px' }}
-          onSubmit={handleSearchSubmit}
+          onSubmit={(event) => event.preventDefault()}
+          style={filterBarStyle}
         >
-          <input
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search by name, breed, or species..."
-            style={{ flex: 1, border: 'none', outline: 'none', fontSize: 17, background: 'transparent', color: '#253b2f' }}
-          />
+          <FilterControl label="Pet name">
+            <input
+              type="text"
+              value={filterName}
+              onChange={(event) => setFilterName(event.target.value)}
+              placeholder="Search name"
+              className="input"
+              style={controlInputStyle}
+            />
+          </FilterControl>
+
+          <FilterControl label="Species">
+            <select
+              value={filterSpecies}
+              onChange={(event) => setFilterSpecies(event.target.value)}
+              style={controlInputStyle}
+            >
+              <option value="">All</option>
+              {buildOptions.species.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </FilterControl>
+
+          <FilterControl label="Breed">
+            <select
+              value={filterBreed}
+              onChange={(event) => setFilterBreed(event.target.value)}
+              style={controlInputStyle}
+            >
+              <option value="">All</option>
+              {buildOptions.breeds.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </FilterControl>
+
+          <FilterControl label="Age">
+            <select
+              value={filterAge}
+              onChange={(event) => setFilterAge(event.target.value)}
+              style={controlInputStyle}
+            >
+              <option value="">All</option>
+              {buildOptions.ages.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </FilterControl>
+
+          <FilterControl label="Size">
+            <select
+              value={filterSize}
+              onChange={(event) => setFilterSize(event.target.value)}
+              style={controlInputStyle}
+            >
+              <option value="">All</option>
+              {buildOptions.sizes.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </FilterControl>
+
+          <FilterControl label="Gender">
+            <select
+              value={filterGender}
+              onChange={(event) => setFilterGender(event.target.value)}
+              style={controlInputStyle}
+            >
+              <option value="">All</option>
+              {buildOptions.genders.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </FilterControl>
+
           <button
-            type="submit"
-            style={{ background: 'var(--color-cta)', color: '#fff', borderRadius: 999, fontWeight: 600, padding: '8px 22px', border: 'none', fontSize: 15, cursor: 'pointer' }}
+            type="button"
+            className="btn btn-outline"
+            onClick={clearFilters}
+            style={clearButtonStyle}
           >
-            Search
+            Clear filters
           </button>
         </form>
       </div>
@@ -334,7 +349,11 @@ export default function DiscoverPage() {
                     <div style={{ fontWeight: 700, fontSize: 17 }}>{pet.name}</div>
                     <div style={{ color: '#5e7263', fontSize: 14, marginBottom: 8 }}>{pet.breed} - {pet.age}</div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {pet.tags && pet.tags.length ? pet.tags.map(trait => <span key={trait} style={{ background: '#f1efe6', borderRadius: 999, padding: '4px 12px', fontWeight: 600, fontSize: 13 }}>{trait}</span>) : null}
+                      {pet.tags && pet.tags.length
+                        ? pet.tags.map((trait) => (
+                            <span key={trait} style={{ background: '#f1efe6', borderRadius: 999, padding: '4px 12px', fontWeight: 600, fontSize: 13 }}>{trait}</span>
+                          ))
+                        : null}
                     </div>
                   </div>
                   <div style={{ borderTop: '1px solid #f1efe6', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -359,70 +378,45 @@ export default function DiscoverPage() {
           <div style={{ marginTop: 24, color: '#d64545', textAlign: 'center', fontSize: 15 }}>Unable to load live pets (using local samples).</div>
         )}
       </main>
-
-      {/* Footer */}
-      <footer style={{ background: '#163522', color: '#def7dd', padding: '48px 0 24px', marginTop: 80 }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', gap: 48, justifyContent: 'space-between', flexWrap: 'wrap', padding: '0 32px' }}>
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Happy Tails</h4>
-            <p style={{ color: '#b5e6c9', fontSize: 15 }}>Connecting loving families with shelter animals since 2025. Discover your next best friend and build your adoption story with us.</p>
-          </div>
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Quick Links</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#b5e6c9', fontSize: 15 }}>
-              <li><a href="/discover" style={{ color: '#b5e6c9', textDecoration: 'none' }}>Discover Pets</a></li>
-              <li><a href="/quiz" style={{ color: '#b5e6c9', textDecoration: 'none' }}>Take Quiz</a></li>
-              <li><a href="/profile" style={{ color: '#b5e6c9', textDecoration: 'none' }}>Profile</a></li>
-            </ul>
-          </div>
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Resources</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#b5e6c9', fontSize: 15 }}>
-              <li>Adoption Guide</li>
-              <li>Shelter Partners</li>
-              <li>Volunteer</li>
-              <li>Contact Support</li>
-            </ul>
-          </div>
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Stay Connected</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#b5e6c9', fontSize: 15 }}>
-              <li>Get updates on new pets</li>
-              <li>Submit your adoption story</li>
-              <li>Newsletter Signup</li>
-            </ul>
-          </div>
-        </div>
-        <div style={{ marginTop: 36, textAlign: 'center', color: '#b5e6c9', fontSize: 14 }}>
-          © {new Date().getFullYear()} Happy Tails. All rights reserved. · Privacy Policy · Terms of Service · Cookie Policy
-        </div>
-      </footer>
     </div>
   )
 }
 
-function FilterSection({ label, options, selected, onToggle }) {
-  if (!options?.length) return null
+const filterBarStyle = {
+  background: '#fff',
+  borderRadius: 16,
+  boxShadow: '0 10px 26px rgba(84,135,104,0.12)',
+  padding: '18px clamp(18px, 5vw, 36px)',
+  display: 'flex',
+  alignItems: 'center',
+  flexWrap: 'wrap',
+  gap: 16,
+}
+
+const controlInputStyle = {
+  borderRadius: 12,
+  padding: '10px 14px',
+  border: '1px solid rgba(84,135,104,0.3)',
+  fontSize: 14,
+  lineHeight: 1.4,
+  background: '#fff',
+  width: '100%',
+  minWidth: 150,
+}
+
+const clearButtonStyle = {
+  marginLeft: 'auto',
+  padding: '10px 20px',
+  fontSize: 14,
+}
+
+function FilterControl({ label, children }) {
   return (
-    <div style={{ marginBottom: 6 }}>
-      <div style={{ fontWeight: 600, color: '#333', fontSize: 15, marginBottom: 8 }}>{label}</div>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        {options.map((option) => {
-          const isActive = selected.has(option)
-          const className = isActive ? 'chip is-active' : 'chip'
-          return (
-            <button
-              type="button"
-              key={option}
-              className={className}
-              onClick={() => onToggle(option)}
-              style={{ cursor: 'pointer', background: 'transparent' }}
-            >
-              {option}
-            </button>
-          )
-        })}
+    <label style={{ display: 'grid', gap: 6, color: '#4f8a3a', fontSize: 12, fontWeight: 600, flex: '1 1 0', minWidth: 170 }}>
+      <span style={{ textTransform: 'uppercase', letterSpacing: 0.45 }}>{label}</span>
+      <div style={{ position: 'relative' }}>
+        {children}
       </div>
-    </div>
+    </label>
   )
 }

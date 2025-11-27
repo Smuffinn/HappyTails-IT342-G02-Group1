@@ -48,15 +48,45 @@ export default function Profile() {
     profileResidenceDetails: '',
     profilePetExperience: '',
   })
+  const [fieldErrors, setFieldErrors] = useState({})
 
   const userRoleLabel = useMemo(() => (isStaff ? 'Shelter Staff' : 'Adopter'), [isStaff])
+  const isAdopter = useMemo(() => !isStaff, [isStaff])
 
-  const handleNavigate = useCallback(
-    (path) => {
-      navigate(path)
-    },
-    [navigate],
+  const profileSnapshot = useMemo(
+    () => ({
+      profilePersonalInfo: profile?.profilePersonalInfo ?? '',
+      profileResidenceDetails: profile?.profileResidenceDetails ?? '',
+      profilePetExperience: profile?.profilePetExperience ?? '',
+    }),
+    [profile],
   )
+
+  const hasProfileContent = useMemo(
+    () =>
+      Object.values(profileSnapshot).every((value) =>
+        typeof value === 'string' ? value.trim().length > 0 : Boolean(value),
+      ),
+    [profileSnapshot],
+  )
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!editing) return false
+    return (
+      form.profilePersonalInfo !== profileSnapshot.profilePersonalInfo ||
+      form.profileResidenceDetails !== profileSnapshot.profileResidenceDetails ||
+      form.profilePetExperience !== profileSnapshot.profilePetExperience
+    )
+  }, [editing, form, profileSnapshot])
+
+  const lastUpdatedDisplay = useMemo(() => {
+    if (!profile?.updatedAt) return null
+    try {
+      return new Date(profile.updatedAt).toLocaleString()
+    } catch (error) {
+      return null
+    }
+  }, [profile?.updatedAt])
 
   const handleAuthFailure = useCallback(() => {
     logout()
@@ -109,10 +139,39 @@ export default function Profile() {
     setSaving(true)
     setError(null)
     try {
-      await authService.updateProfile(form)
+      const nextErrors = {}
+      const trimmedPersonal = form.profilePersonalInfo.trim()
+      const trimmedResidence = form.profileResidenceDetails.trim()
+      const trimmedExperience = form.profilePetExperience.trim()
+
+      if (!trimmedPersonal) {
+        nextErrors.profilePersonalInfo = 'Please tell us a bit about yourself.'
+      }
+      if (!trimmedResidence) {
+        nextErrors.profileResidenceDetails = 'Let shelters know about your living situation.'
+      }
+      if (!trimmedExperience) {
+        nextErrors.profilePetExperience = 'Share your experience caring for animals.'
+      }
+
+      if (Object.keys(nextErrors).length > 0) {
+        setFieldErrors(nextErrors)
+        setSaving(false)
+        return
+      }
+
+      const payload = {
+        profilePersonalInfo: trimmedPersonal,
+        profileResidenceDetails: trimmedResidence,
+        profilePetExperience: trimmedExperience,
+      }
+
+      await authService.updateProfile(payload)
       setStatusMessage('Profile updated successfully.')
       setEditing(false)
+      setForm(payload)
       await loadProfile({ skipLoadingState: true })
+      setFieldErrors({})
     } catch (err) {
       const message = typeof err?.message === 'string' && err.message.trim().length > 0 ? err.message : 'Unable to update profile.'
       setError(message)
@@ -221,7 +280,15 @@ export default function Profile() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <button type="button" className="btn btn-primary" onClick={() => setEditing(true)}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                setFieldErrors({})
+                setStatusMessage(null)
+                setEditing(true)
+              }}
+            >
               Edit profile
             </button>
             <button
@@ -246,6 +313,9 @@ export default function Profile() {
               onChange={(e) => setForm((prev) => ({ ...prev, profilePersonalInfo: e.target.value }))}
               placeholder="Tell adopters about yourself, your family, or household preferences."
             />
+            {fieldErrors.profilePersonalInfo && (
+              <div style={{ color: '#d64545', fontSize: 13, marginTop: 6 }}>{fieldErrors.profilePersonalInfo}</div>
+            )}
           </div>
           <div>
             <label style={{ display: 'block', fontWeight: 600, color: 'var(--color-text)' }}>Residence details</label>
@@ -256,6 +326,9 @@ export default function Profile() {
               onChange={(e) => setForm((prev) => ({ ...prev, profileResidenceDetails: e.target.value }))}
               placeholder="Share information about your home, yard, or lifestyle."
             />
+            {fieldErrors.profileResidenceDetails && (
+              <div style={{ color: '#d64545', fontSize: 13, marginTop: 6 }}>{fieldErrors.profileResidenceDetails}</div>
+            )}
           </div>
           <div>
             <label style={{ display: 'block', fontWeight: 600, color: 'var(--color-text)' }}>Pet experience</label>
@@ -266,9 +339,20 @@ export default function Profile() {
               onChange={(e) => setForm((prev) => ({ ...prev, profilePetExperience: e.target.value }))}
               placeholder="Let shelters know about your previous experience with pets."
             />
+            {fieldErrors.profilePetExperience && (
+              <div style={{ color: '#d64545', fontSize: 13, marginTop: 6 }}>{fieldErrors.profilePetExperience}</div>
+            )}
           </div>
+          {hasUnsavedChanges && (
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#4f8a3a' }}>You have unsaved updates.</div>
+          )}
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleSave}
+              disabled={saving || !hasUnsavedChanges}
+            >
               {saving ? 'Saving…' : 'Save changes'}
             </button>
             <button
@@ -281,6 +365,7 @@ export default function Profile() {
                   profileResidenceDetails: profile?.profileResidenceDetails || '',
                   profilePetExperience: profile?.profilePetExperience || '',
                 })
+                setFieldErrors({})
               }}
               disabled={saving}
             >
@@ -343,71 +428,8 @@ export default function Profile() {
       </div>
     )
   }
-
   return (
     <div style={{ minHeight: '100vh', background: 'var(--gradient-soft)' }}>
-      <header style={{ background: '#f8f4ed', padding: '18px 0', borderBottom: '1px solid #e0e4d6', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div
-          style={{
-            maxWidth: 1280,
-            margin: '0 auto',
-            padding: '0 32px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <button
-            onClick={() => handleNavigate('/')}
-            style={{ background: 'none', border: 'none', padding: 0, margin: 0, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
-          >
-            <span style={{ fontWeight: 700, fontSize: 20, color: '#4f8a3a' }}>Happy Tails</span>
-            <span style={{ color: '#5e7263', fontSize: 13 }}>Caring for every paw</span>
-          </button>
-          <nav style={{ display: 'flex', gap: 28, fontSize: 15, alignItems: 'center' }}>
-            <button type="button" onClick={() => handleNavigate('/discover')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>
-              Discover Pets
-            </button>
-            <button type="button" onClick={() => handleNavigate('/quiz')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>
-              Take Quiz
-            </button>
-            {isStaff ? (
-              <button type="button" onClick={() => handleNavigate('/shelter/pets')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>
-                Shelter Dashboard
-              </button>
-            ) : (
-              <button type="button" onClick={() => handleNavigate('/profile')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>
-                Profile
-              </button>
-            )}
-            {isAuthenticated ? (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 16 }}>
-                <span style={{ fontSize: '0.9rem', color: '#5e7263' }}>{email}</span>
-                <button
-                  type="button"
-                  onClick={logout}
-                  style={{
-                    background: 'none',
-                    border: '1px solid rgba(79, 138, 58, 0.3)',
-                    color: '#4f8a3a',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    borderRadius: 999,
-                    padding: '8px 18px',
-                  }}
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <button type="button" onClick={() => handleNavigate('/login')} style={{ background: 'none', border: 'none', color: '#4f8a3a', fontWeight: 600, cursor: 'pointer' }}>
-                Login
-              </button>
-            )}
-          </nav>
-        </div>
-      </header>
-
       <div className="page-shell" style={{ paddingTop: 48, paddingBottom: 72 }}>
         <section className="surface-card" style={{ padding: '36px clamp(18px, 5vw, 48px)', display: 'grid', gap: 24 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -423,26 +445,56 @@ export default function Profile() {
               display: 'grid',
               gap: 18,
               gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              background: 'var(--color-surface-alt)',
-              borderRadius: 20,
-              padding: '18px 22px',
             }}
           >
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ fontSize: 14, color: 'var(--color-text-muted)', fontWeight: 600 }}>Email</div>
               <div style={{ marginTop: 6, fontWeight: 700, color: 'var(--color-text)' }}>{profile?.email ?? email}</div>
             </div>
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ fontSize: 14, color: 'var(--color-text-muted)', fontWeight: 600 }}>Role</div>
               <div style={{ marginTop: 6, fontWeight: 700, color: '#4f8a3a' }}>{userRoleLabel}</div>
             </div>
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ fontSize: 14, color: 'var(--color-text-muted)', fontWeight: 600 }}>Member since</div>
               <div style={{ marginTop: 6, fontWeight: 700, color: 'var(--color-text)' }}>
                 {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '—'}
               </div>
             </div>
           </div>
+
+          {isAdopter && !hasProfileContent && !editing && (
+            <div
+              style={{
+                borderRadius: 18,
+                padding: '18px 24px',
+                background: 'rgba(122, 192, 91, 0.12)',
+                color: '#2a5f24',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: 16 }}>Complete your saved application profile</div>
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6 }}>
+                Filling in your personal, residence, and pet experience details lets shelters review adoption
+                applications faster.
+              </p>
+              <div>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setFieldErrors({})
+                    setStatusMessage(null)
+                    setEditing(true)
+                  }}
+                >
+                  Update profile now
+                </button>
+              </div>
+            </div>
+          )}
 
           {statusMessage && (
             <div style={{ ...messageStyles.base, ...messageStyles.success }}>
@@ -471,6 +523,11 @@ export default function Profile() {
               renderAdopterForm()
             )
           ) : null}
+          {lastUpdatedDisplay && (
+            <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: -6 }}>
+              Last updated {lastUpdatedDisplay}
+            </div>
+          )}
         </section>
 
         {!isStaff && renderAdoptedPets()}

@@ -1,5 +1,6 @@
-import React from 'react'
-import applicationService from '../services/applicationService'
+import React, { useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 
 /**
  * PetCard
@@ -7,6 +8,8 @@ import applicationService from '../services/applicationService'
  * pet: { id, name, breed, age, size, imageUrl, tags }
  */
 export default function PetCard({ pet = {} }) {
+  const navigate = useNavigate()
+  const { isAuthenticated, isAdopter } = useAuth()
   const {
     name = 'Unknown',
     breed = '',
@@ -15,6 +18,30 @@ export default function PetCard({ pet = {} }) {
     imageUrl = '',
     tags = [],
   } = pet
+
+  const handleApply = useCallback(() => {
+    const targetPet = pet.raw ?? pet
+    const targetId = targetPet?.petId ?? targetPet?.id ?? pet.id
+
+    if (typeof pet.onApply === 'function') {
+      pet.onApply({ ...pet, id: targetId })
+      return
+    }
+
+    if (!targetId) return
+
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/adoption-form?petId=${targetId}` } })
+      return
+    }
+
+    if (!isAdopter) {
+      window.alert('Only adopter accounts can submit adoption applications.')
+      return
+    }
+
+    navigate(`/adoption-form?petId=${targetId}`)
+  }, [isAuthenticated, isAdopter, navigate, pet])
 
   return (
     <article className="bg-white rounded-2xl shadow-lg overflow-hidden ring-1 ring-slate-100 hover:shadow-2xl transition-shadow duration-200">
@@ -77,26 +104,16 @@ export default function PetCard({ pet = {} }) {
                 )
               }
 
-              if (isAuthenticated) {
-                return (
-                  <div className="mt-4">
-                    <button
-                      onClick={async () => {
-                        try {
-                          await applicationService.submitApplication(pet.id, '')
-                          alert('Application submitted. The shelter will review your request.')
-                          window.location.reload()
-                        } catch (e) {
-                          alert(String(e.message || e))
-                        }
-                      }}
-                      className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded bg-emerald-600 text-white text-sm"
-                    >
-                      Apply to Adopt
-                    </button>
-                  </div>
-                )
-              }
+              return (
+                <div className="mt-4">
+                  <button
+                    onClick={handleApply}
+                    className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded bg-emerald-600 text-white text-sm"
+                  >
+                    Apply to Adopt
+                  </button>
+                </div>
+              )
             }
           } catch (e) { }
           return null

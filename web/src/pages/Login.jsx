@@ -6,6 +6,7 @@ export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [mode, setMode] = useState('adopter')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
@@ -23,7 +24,8 @@ export default function Login() {
     setLoading(true)
     setError(null)
     try {
-      await login({ email, password, rememberMe })
+      const expectedRole = mode === 'staff' ? 'ROLE_STAFF' : 'ROLE_ADOPTER'
+      await login({ email, password, rememberMe, expectedRole })
       navigate(redirectTo, { replace: true })
     } catch (err) {
       setError(err?.message || String(err))
@@ -76,6 +78,43 @@ export default function Login() {
         </div>
         <div style={{ background: '#fff', padding: '48px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 18 }}>
+            <div style={{
+              display: 'flex',
+              background: '#f5f5ee',
+              padding: 6,
+              borderRadius: 999,
+              gap: 6,
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+              {[
+                { value: 'adopter', label: 'Adopter' },
+                { value: 'staff', label: 'Shelter Staff' },
+              ].map(({ value, label }) => {
+                const isActive = mode === value
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setMode(value)}
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      borderRadius: 999,
+                      padding: '10px 16px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      background: isActive ? 'var(--color-cta)' : 'transparent',
+                      color: isActive ? '#3f2f00' : '#5e7263',
+                      boxShadow: isActive ? '0 6px 12px rgba(255, 208, 0, 0.25)' : 'none',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               Email
               <input
@@ -120,13 +159,18 @@ export default function Login() {
                 Forgot password?
               </button>
             </div>
-            {error && <div style={{ color: '#d64545', fontSize: '0.95rem' }}>{error}</div>}
+            {error && (
+              <div style={{ color: '#d64545', fontSize: '0.95rem', background: 'rgba(214, 69, 69, 0.12)', padding: '10px 14px', borderRadius: 12 }}>
+                {error}
+              </div>
+            )}
             <button
               type="submit"
               disabled={loading}
-              style={{ border: 'none', borderRadius: 999, padding: '12px 28px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', background: '#78c977', color: '#fff', boxShadow: '0 6px 12px rgba(120, 201, 119, 0.35)', marginBottom: 16 }}
+              className="btn btn-primary"
+              style={{ justifySelf: 'flex-start', marginBottom: 16 }}
             >
-              {loading ? 'Logging in…' : 'Log in'}
+              {loading ? 'Logging in…' : `Log in as ${mode === 'staff' ? 'staff' : 'adopter'}`}
             </button>
             <div style={{ textAlign: 'center', color: '#5e7263', marginTop: 8 }}>
               Don’t have an account?{' '}

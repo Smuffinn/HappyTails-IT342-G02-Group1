@@ -1,14 +1,14 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx';
-import PetQuickView from '../modules/pets/PetQuickView.jsx';
+import React, { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
+import PetQuickView from '../modules/pets/PetQuickView.jsx'
 
 
 export default function Home() {
-  const navigate = useNavigate();
-  const { isAuthenticated, isStaff, email, logout } = useAuth();
-  const [authMessage, setAuthMessage] = useState('');
-  const [quickViewPet, setQuickViewPet] = useState(null);
+  const navigate = useNavigate()
+  const { isAuthenticated, isStaff } = useAuth()
+  const [authMessage, setAuthMessage] = useState('')
+  const [quickViewPet, setQuickViewPet] = useState(null)
 
   const featuredPets = useMemo(
     () => [
@@ -56,7 +56,7 @@ export default function Home() {
       },
     ],
     [],
-  );
+  )
 
   const heroImages = useMemo(
     () => [
@@ -124,45 +124,26 @@ export default function Home() {
   }, [successStories]);
 
   const requireAuth = (path) => {
-    if (isAuthenticated) {
-      navigate(path);
-      return;
+    if (isStaff) {
+      setAuthMessage('Shelter accounts manage adoptions through the profile instead of the adopter quiz.')
+      navigate('/profile')
+      return
     }
-    setAuthMessage('Please log in to continue.');
-    navigate('/login', { state: { from: path } });
-  };
+
+    if (isAuthenticated) {
+      navigate(path)
+      return
+    }
+    setAuthMessage('Please log in to continue.')
+    navigate('/login', { state: { from: path } })
+  }
 
   const goToDiscover = () => {
-    navigate('/discover');
-  };
+    navigate('/discover')
+  }
 
   return (
-    <div style={{ background: 'var(--gradient-soft)', minHeight: '100vh' }}>
-      <header style={{ background: '#f8f4ed', padding: '18px 0', borderBottom: '1px solid #e0e4d6', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-            <span style={{ fontWeight: 700, fontSize: 20, color: '#4f8a3a' }}>Happy Tails</span>
-            <span style={{ color: '#5e7263', fontSize: 13 }}>Find Your Forever Friend</span>
-          </button>
-          <nav style={{ display: 'flex', gap: 32, fontSize: 15, alignItems: 'center' }}>
-            <button type="button" onClick={goToDiscover} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Discover Pets</button>
-            <button type="button" onClick={() => requireAuth('/quiz')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Take Quiz</button>
-            {isStaff ? (
-              <button type="button" onClick={() => requireAuth('/shelter/pets')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Shelter Dashboard</button>
-            ) : (
-              <button type="button" onClick={() => requireAuth('/profile')} style={{ background: 'none', border: 'none', color: '#253b2f', fontWeight: 600, cursor: 'pointer' }}>Profile</button>
-            )}
-            {isAuthenticated ? (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 16 }}>
-                <span style={{ fontSize: '0.9rem', color: '#5e7263' }}>{email}</span>
-                <button type="button" onClick={logout} style={{ background: 'none', border: '1px solid rgba(79, 138, 58, 0.3)', color: '#4f8a3a', fontWeight: 600, cursor: 'pointer', borderRadius: 999, padding: '8px 18px' }}>Logout</button>
-              </div>
-            ) : (
-              <button type="button" onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', color: '#4f8a3a', fontWeight: 600, cursor: 'pointer' }}>Login</button>
-            )}
-          </nav>
-        </div>
-      </header>
+    <div style={{ background: 'var(--gradient-soft)' }}>
       <main style={{ maxWidth: 1320, margin: '0 auto', padding: '40px clamp(20px, 5vw, 72px)' }}>
         {/* Hero Section */}
         <section style={{ display: 'flex', gap: 48, alignItems: 'center', marginBottom: 48 }}>
@@ -185,13 +166,23 @@ export default function Home() {
               >
                 Discover Pets
               </button>
-              <button
-                type="button"
-                onClick={() => requireAuth('/quiz')}
-                style={{ border: '1.5px solid var(--color-cta)', color: '#253b2f', borderRadius: 999, fontWeight: 600, padding: '12px 32px', background: 'transparent', cursor: 'pointer' }}
-              >
-                Take Matching Quiz
-              </button>
+              {isStaff ? (
+                <button
+                  type="button"
+                  onClick={() => navigate('/profile')}
+                  style={{ border: '1.5px solid var(--color-cta)', color: '#253b2f', borderRadius: 999, fontWeight: 600, padding: '12px 32px', background: 'transparent', cursor: 'pointer' }}
+                >
+                  Manage Shelter Profile
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => requireAuth('/quiz')}
+                  style={{ border: '1.5px solid var(--color-cta)', color: '#253b2f', borderRadius: 999, fontWeight: 600, padding: '12px 32px', background: 'transparent', cursor: 'pointer' }}
+                >
+                  Take Matching Quiz
+                </button>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 40, marginTop: 16 }}>
               <div>
@@ -292,43 +283,6 @@ export default function Home() {
           </p>
         </section>
       </main>
-      <footer style={{ background: '#163522', color: '#def7dd', padding: '48px 0 24px', marginTop: 80 }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', gap: 48, justifyContent: 'space-between', flexWrap: 'wrap', padding: '0 32px' }}>
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Happy Tails</h4>
-            <p style={{ color: '#b5e6c9', fontSize: 15 }}>Connecting loving families with shelter animals since 2025. Discover your next best friend and build your adoption story with us.</p>
-          </div>
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Quick Links</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#b5e6c9', fontSize: 15 }}>
-              <li><a href="/discover" style={{ color: '#b5e6c9', textDecoration: 'none' }}>Discover Pets</a></li>
-              <li><a href="/quiz" style={{ color: '#b5e6c9', textDecoration: 'none' }}>Take Quiz</a></li>
-              <li><a href="/profile" style={{ color: '#b5e6c9', textDecoration: 'none' }}>Profile</a></li>
-            </ul>
-          </div>
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Resources</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#b5e6c9', fontSize: 15 }}>
-              <li>Adoption Guide</li>
-              <li>Shelter Partners</li>
-              <li>Volunteer</li>
-              <li>Contact Support</li>
-            </ul>
-          </div>
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <h4 style={{ marginBottom: 16, fontSize: 17 }}>Stay Connected</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#b5e6c9', fontSize: 15 }}>
-              <li>Get updates on new pets</li>
-              <li>Submit your adoption story</li>
-              <li>Newsletter Signup</li>
-            </ul>
-          </div>
-        </div>
-        <div style={{ marginTop: 36, textAlign: 'center', color: '#b5e6c9', fontSize: 14 }}>
-          © {new Date().getFullYear()} Happy Tails. All rights reserved. · Privacy Policy · Terms of Service · Cookie Policy
-        </div>
-      </footer>
     </div>
   );
 }
-

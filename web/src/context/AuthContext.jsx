@@ -76,9 +76,24 @@ export function AuthProvider({ children }) {
   }, [])
 
   const login = useCallback(
-    async ({ email: emailInput, password: passwordInput }) => {
+    async ({ email: emailInput, password: passwordInput, expectedRole }) => {
       const response = await authService.login({ email: emailInput, password: passwordInput })
       const nextToken = response?.token || response
+      const payload = parseJwt(nextToken)
+      const roleSet = payload?.roles || payload?.authorities || []
+
+      if (expectedRole) {
+        if (!Array.isArray(roleSet) || !roleSet.includes(expectedRole)) {
+          if (expectedRole === 'ROLE_STAFF') {
+            throw new Error('Shelter staff login required. Switch to the adopter option for adopter accounts.')
+          }
+          if (expectedRole === 'ROLE_ADOPTER') {
+            throw new Error('Adopter login required. Shelter staff must use the staff login option.')
+          }
+          throw new Error('This account does not have access to the selected login mode.')
+        }
+      }
+
       persistToken(nextToken)
       return { token: nextToken }
     },

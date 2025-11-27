@@ -17,7 +17,9 @@ const applicationService = {
       const res = await api.get('/applications/me')
       return res.data
     } catch (err) {
-      throw err
+      const payload = err.response && err.response.data ? err.response.data : null
+      const msg = (payload && (payload.error || payload.message)) || err.message || String(err)
+      throw new Error(msg)
     }
   },
 
@@ -26,7 +28,9 @@ const applicationService = {
       const res = await api.get('/applications/shelter')
       return res.data
     } catch (err) {
-      throw err
+      const payload = err.response && err.response.data ? err.response.data : null
+      const msg = (payload && (payload.error || payload.message)) || err.message || String(err)
+      throw new Error(msg)
     }
   },
 
@@ -35,7 +39,9 @@ const applicationService = {
       const res = await api.put(`/applications/${applicationId}/status`, { status })
       return res.data
     } catch (err) {
-      throw err
+      const payload = err.response && err.response.data ? err.response.data : null
+      const msg = (payload && (payload.error || payload.message)) || err.message || String(err)
+      throw new Error(msg)
     }
   }
 }

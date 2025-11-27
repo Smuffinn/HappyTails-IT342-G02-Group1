@@ -19,7 +19,7 @@
   --color-accent: #7ac05b;
   --color-accent-dark: #4f8a3a;
   --color-accent-light: #c1f2bb;
-  --color-cta: #78c977;
+  --color-cta: #ffb347;
   --color-warning: #f4c36b;
   --gradient-soft: linear-gradient(120deg, #b7e28f 0%, #8ddeac 38%, #8fd8d9 70%, #9fd6ff 100%);
   --gradient-lime: linear-gradient(90deg, #e8f9d2 0%, #c9f3de 45%, #c6ecf5 100%);
@@ -95,8 +95,8 @@ button {
 
 .btn-primary {
   background: var(--color-cta);
-  color: #fff;
-  box-shadow: 0 6px 12px rgba(120, 201, 119, 0.35);
+  color: #3f2f00;
+  box-shadow: 0 6px 12px rgba(255, 208, 0, 0.35);
 }
 
 .btn-primary:hover {

@@ -62,7 +62,7 @@ public class Pet {
 
     @ManyToOne
     @JoinColumn(name = "adopter_id")
-    @JsonIgnoreProperties({"applications"})
+    @JsonIgnoreProperties(value = {"applications", "adoptedPets"}, allowSetters = true)
     private Adopter adopter;
 
     public enum PetStatus {

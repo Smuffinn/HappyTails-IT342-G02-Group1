@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 /**
  * PetQuickView
@@ -7,20 +9,103 @@ import React from 'react';
  */
 export default function PetQuickView({ pet, onClose }) {
   if (!pet) return null;
+  const navigate = useNavigate();
+  const { isAuthenticated, isAdopter } = useAuth();
   // Dummy data for missing fields (energy, shelter, about, etc)
   const energy = pet.energy || 'High';
   const shelter = pet.shelter || 'Happy Paws Rescue';
   const about = pet.about || `
     ${pet.name} is a sweet and energetic ${pet.breed} who loves people and playing fetch. She would do great in an active family with a yard.`;
+
+  const handleApply = useCallback(() => {
+    if (!pet) return;
+    if (typeof pet.onApply === 'function') {
+      pet.onApply(pet);
+      return;
+    }
+
+    const source = pet.raw ?? pet;
+    const targetId = source?.petId ?? source?.id;
+    if (!targetId) return;
+
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/adoption-form?petId=${targetId}` } });
+      return;
+    }
+
+    if (!isAdopter) {
+      window.alert('Only adopter accounts can submit adoption applications.');
+      return;
+    }
+
+    navigate(`/adoption-form?petId=${targetId}`);
+  }, [isAuthenticated, isAdopter, navigate, pet]);
+
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.24)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: '#fff', borderRadius: 24, maxWidth: 680, width: '100%', padding: 0, boxShadow: '0 12px 32px rgba(84,135,104,0.15)', position: 'relative', display: 'flex', minHeight: 320 }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 18, background: 'none', border: 'none', fontSize: 22, color: '#5e7263', cursor: 'pointer', zIndex: 2 }}>&times;</button>
-        {/* Left: Pet Image */}
-        <div style={{ flex: 1, padding: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
-          <img src={pet.imageUrl} alt={pet.name} style={{ width: 120, height: 120, borderRadius: 16, objectFit: 'cover', marginTop: 6 }} />
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(0,0,0,0.24)',
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        style={{
+          background: '#fff',
+          borderRadius: 24,
+          maxWidth: 760,
+          width: '100%',
+          padding: 0,
+          boxShadow: '0 12px 32px rgba(84,135,104,0.15)',
+          position: 'relative',
+          display: 'flex',
+          minHeight: 360,
+        }}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 18,
+            background: 'none',
+            border: 'none',
+            fontSize: 22,
+            color: '#5e7263',
+            cursor: 'pointer',
+            zIndex: 2,
+          }}
+        >
+          &times;
+        </button>
+        <div
+          style={{
+            flex: '0 0 280px',
+            padding: '32px 28px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src={pet.imageUrl}
+            alt={pet.name}
+            style={{
+              width: 220,
+              height: 220,
+              borderRadius: 24,
+              objectFit: 'cover',
+              boxShadow: '0 12px 28px rgba(84,135,104,0.18)',
+            }}
+          />
         </div>
-        {/* Right: Info */}
         <div style={{ flex: 2, padding: '24px 28px 24px 0', display: 'flex', flexDirection: 'column', gap: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18, marginBottom: 4 }}>
             <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#253b2f', fontWeight: 700 }}>{pet.name}</h2>
@@ -59,7 +144,12 @@ export default function PetQuickView({ pet, onClose }) {
             <span style={{ color: '#253b2f', fontWeight: 700, fontSize: 15 }}>{shelter}</span>
           </div>
           <div style={{ display: 'flex', gap: 18, marginBottom: 18 }}>
-            <button style={{ background: '#c1f2bb', color: '#253b2f', borderRadius: 999, fontWeight: 600, padding: '13px 32px', border: 'none', fontSize: 15, flex: 1, cursor: 'pointer' }}>Apply to Adopt</button>
+            <button
+              onClick={handleApply}
+              style={{ background: '#c1f2bb', color: '#253b2f', borderRadius: 999, fontWeight: 600, padding: '14px 36px', border: 'none', fontSize: 15, flex: 1, cursor: 'pointer', boxShadow: '0 8px 18px rgba(193, 242, 187, 0.45)' }}
+            >
+              Apply to Adopt
+            </button>
             <button style={{ background: '#fff', color: '#4f8a3a', border: '1.5px solid #c1f2bb', borderRadius: 999, fontWeight: 600, padding: '13px 32px', fontSize: 15, flex: 1, cursor: 'pointer' }}>Contact Shelter</button>
           </div>
           <div style={{ background: '#f9f6ef', borderRadius: 14, padding: '14px 18px', color: '#5e7263', fontSize: 14, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
