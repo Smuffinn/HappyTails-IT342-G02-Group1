@@ -35,73 +35,9 @@ export default function ShelterDashboard() {
   const [petForm, setPetForm] = useState(emptyPetForm)
   const [editingPetId, setEditingPetId] = useState(null)
   const [petFormError, setPetFormError] = useState(null)
-  const [dragActive, setDragActive] = useState(false)
 
   const [statusMessage, setStatusMessage] = useState(null)
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
-
-  const handleDrag = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
-    }
-  }
-
-  const handleDrop = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const files = Array.from(e.dataTransfer.files)
-      handleFiles(files)
-    }
-  }
-
-  const handleFileInput = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const files = Array.from(e.target.files)
-      handleFiles(files)
-    }
-  }
-
-  const handleFiles = (files) => {
-    const imageFiles = files.filter((file) => file.type.startsWith('image/'))
-    if (imageFiles.length === 0) {
-      setPetFormError('Please upload image files (JPG, PNG, GIF, etc.)')
-      return
-    }
-
-    // Convert files to base64 or URLs
-    const filePromises = imageFiles.map((file) => {
-      return new Promise((resolve) => {
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          const result = reader.result
-          // Validate base64 string is complete and properly formatted
-          if (result && typeof result === 'string' && result.startsWith('data:')) {
-            resolve(result)
-          } else {
-            resolve(null)
-          }
-        }
-        reader.onerror = () => {
-          resolve(null)
-        }
-        reader.readAsDataURL(file)
-      })
-    })
-
-    Promise.all(filePromises).then((dataUrls) => {
-      const currentPhotos = petForm.photos ? petForm.photos.split(',').map((p) => p.trim()) : []
-      const allPhotos = [...currentPhotos, ...dataUrls].filter(Boolean)
-      setPetForm((prev) => ({ ...prev, photos: allPhotos.join(', ') }))
-      setPetFormError(null)
-    })
-  }
 
   const removePhoto = (index) => {
     const photos = petForm.photos.split(',').map((p) => p.trim())
@@ -267,17 +203,17 @@ export default function ShelterDashboard() {
   }
 
   const buildPetRequest = () => {
-    const formData = new FormData()
-
     // Add text fields
-    formData.append('name', petForm.name.trim())
-    formData.append('species', petForm.species.trim())
-    if (petForm.breed.trim()) formData.append('breed', petForm.breed.trim())
-    if (petForm.age.trim()) formData.append('age', petForm.age.trim())
-    if (petForm.size.trim()) formData.append('size', petForm.size.trim())
-    if (petForm.gender.trim()) formData.append('gender', petForm.gender.trim())
-    formData.append('description', petForm.description.trim())
-    if (petForm.temperament.trim()) formData.append('temperament', petForm.temperament.trim())
+    const payload = {
+      name: petForm.name.trim(),
+      species: petForm.species.trim(),
+      breed: petForm.breed.trim() || '',
+      age: petForm.age.trim() || '',
+      size: petForm.size.trim() || '',
+      gender: petForm.gender.trim() || '',
+      description: petForm.description.trim(),
+      temperament: petForm.temperament.trim() || '',
+    }
 
     // Add uploaded files (not base64 data URLs)
     if (petForm.photos) {
@@ -285,30 +221,13 @@ export default function ShelterDashboard() {
         .split(',')
         .map((link) => link.trim())
         .filter(Boolean)
-        .filter((photo) => {
-          // Only include base64 data URLs (uploaded files)
-          return photo.startsWith('data:image/')
-        })
 
-      photoList.forEach((photoDataUrl, index) => {
-        // Convert base64 data URL to Blob
-        const [mimeType, base64Data] = photoDataUrl.split(',')
-        const mime = mimeType.split(':')[1].split(';')[0]
-        const byteCharacters = atob(base64Data)
-        const byteNumbers = new Array(byteCharacters.length)
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i)
-        }
-        const byteArray = new Uint8Array(byteNumbers)
-        const blob = new Blob([byteArray], { type: mime })
-
-        // Create File object
-        const file = new File([blob], `photo-${index + 1}.jpg`, { type: mime })
-        formData.append('photos', file)
-      })
+      payload.photosJson = photoList.length > 0 ? JSON.stringify(photoList) : null
+    } else {
+      payload.photosJson = null
     }
 
-    return formData
+    return payload
   }
 
   const handlePetSubmit = async (event) => {
@@ -639,41 +558,14 @@ export default function ShelterDashboard() {
             <div style={{ display: 'grid', gap: 6 }}>
               <label>Photos (optional)</label>
               <div style={{ fontSize: '0.85rem', color: '#5e7263', marginBottom: 8 }}>
-                Upload images (JPG, PNG, GIF) or add image URLs. Base64 images are displayed locally but not sent to server.
+                Add public image URLs separated by commas.
               </div>
-              <div
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-                style={{
-                  borderRadius: 14,
-                  border: `2px dashed ${dragActive ? '#4f8a3a' : 'rgba(84,135,104,0.25)'}`,
-                  padding: '28px 20px',
-                  textAlign: 'center',
-                  background: dragActive ? 'rgba(79, 138, 58, 0.08)' : 'transparent',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFileInput}
-                  style={{ display: 'none' }}
-                  id="photo-upload"
-                />
-                <label htmlFor="photo-upload" style={{ cursor: 'pointer', display: 'block' }}>
-                  <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📸</div>
-                  <div style={{ fontWeight: 600, color: '#253b2f', marginBottom: '4px' }}>
-                    Drop photos here or click to browse
-                  </div>
-                  <div style={{ fontSize: '0.9rem', color: '#5e7263' }}>
-                    Drag and drop images or select multiple files (JPG, PNG, GIF)
-                  </div>
-                </label>
-              </div>
+              <textarea
+                value={petForm.photos}
+                onChange={(e) => setPetForm((prev) => ({ ...prev, photos: e.target.value }))}
+                style={{ ...textAreaStyle, minHeight: 90 }}
+                placeholder="https://example.com/photo1.jpg, https://example.com/photo2.png"
+              />
 
               {petForm.photos && (
                 <div style={{ display: 'grid', gap: 10 }}>
@@ -697,7 +589,7 @@ export default function ShelterDashboard() {
                             borderRadius: 10,
                           }}
                         >
-                          {photo.startsWith('data:') ? (
+                          {photo.startsWith('data:') || photo.startsWith('http://') || photo.startsWith('https://') ? (
                             <img
                               src={photo}
                               alt={`Photo ${index + 1}`}
