@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { petService } from '../services/petservice'
 import PetQuickView from '../modules/pets/PetQuickView.jsx'
-import { petService } from '../services/petservice'
 
 
 export default function Home() {
@@ -88,6 +87,12 @@ export default function Home() {
     [],
   )
 
+
+  const featuredPetsDisplay = useMemo(() => {
+    if (featuredPets.length >= 6) return featuredPets
+    const needed = 6 - featuredPets.length
+    return [...featuredPets, ...featuredPets.slice(0, needed)]
+  }, [featuredPets])
 
   const successStoriesDisplay = useMemo(() => {
     if (successStories.length >= 6) return successStories;
