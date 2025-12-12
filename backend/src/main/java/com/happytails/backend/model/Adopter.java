@@ -39,11 +39,11 @@ public class Adopter {
     private String profilePetExperience;
 
     @OneToMany(mappedBy = "adopter")
-    @JsonManagedReference
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Set<Application> applications;
 
     @OneToMany(mappedBy = "adopter")
-    @JsonManagedReference
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Set<Pet> adoptedPets;
 
     @CreationTimestamp
