@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { petService } from '../services/petservice'
 import PetQuickView from '../modules/pets/PetQuickView.jsx'
+import { petService } from '../services/petservice'
 
 
 export default function Home() {
@@ -11,23 +12,19 @@ export default function Home() {
   const [authMessage, setAuthMessage] = useState('')
   const [quickViewPet, setQuickViewPet] = useState(null)
   const [featuredPets, setFeaturedPets] = useState([])
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
-    async function loadPets() {
+    async function loadFeaturedPets() {
       try {
-        const data = await petService.getAllPets()
+        const pets = await petService.getAllPets()
         if (!mounted) return
-        const pets = Array.isArray(data) ? data.slice(0, 6) : []
-        setFeaturedPets(pets)
+        setFeaturedPets(Array.isArray(pets) ? pets.slice(0, 6) : [])
       } catch (err) {
         setFeaturedPets([])
-      } finally {
-        setLoading(false)
       }
     }
-    loadPets()
+    loadFeaturedPets()
     return () => {
       mounted = false
     }
@@ -37,16 +34,17 @@ export default function Home() {
     () => [
       'https://images.pexels.com/photos/4587991/pexels-photo-4587991.jpeg?auto=compress&cs=tinysrgb&w=700',
       'https://images.pexels.com/photos/7210751/pexels-photo-7210751.jpeg?auto=compress&cs=tinysrgb&w=700',
-      'https://th.bing.com/th/id/OIP.JeOlLIi6w8hKJhrKieIjIAHaEK?w=331&h=186&c=7&r=0&o=7&cb=ucfimgc2&pid=1.7&rm=3',
       'https://images.pexels.com/photos/326012/pexels-photo-326012.jpeg?auto=compress&cs=tinysrgb&w=700',
+      'https://images.pexels.com/photos/1390361/pexels-photo-1390361.jpeg?auto=compress&cs=tinysrgb&w=700',
     ],
     [],
-  );
+  )
 
   const handleImageError = (event) => {
-    event.currentTarget.src = 'https://images.pexels.com/photos/4587991/pexels-photo-4587991.jpeg?auto=compress&cs=tinysrgb&w=600';
-    event.currentTarget.onerror = null;
-  };
+    event.currentTarget.src =
+      'https://images.pexels.com/photos/4587991/pexels-photo-4587991.jpeg?auto=compress&cs=tinysrgb&w=600'
+    event.currentTarget.onerror = null
+  }
 
   const successStories = useMemo(
     () => [
@@ -56,7 +54,8 @@ export default function Home() {
         story:
           '“Happy Tails made the adoption process so easy. We adore Luna and she has brought so much joy to our home.”',
         rating: 5,
-        photo: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=200',
+        photo:
+          'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=200',
       },
       {
         name: 'Michael Cruz',
@@ -64,7 +63,8 @@ export default function Home() {
         story:
           '“The matching quiz helped us find a pet that truly suits our lifestyle. Max is the perfect adventure buddy.”',
         rating: 5,
-        photo: 'data:image/webp;base64,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',
+        photo:
+          'https://images.pexels.com/photos/1704488/pexels-photo-1704488.jpeg?auto=compress&cs=tinysrgb&w=200',
       },
       {
         name: 'Emily Rodriguez',
@@ -72,7 +72,8 @@ export default function Home() {
         story:
           '“Our shelter profiles have never looked better. Adopters can easily discover our pets and submit complete applications.”',
         rating: 5,
-        photo: 'https://images.pexels.com/photos/4666753/pexels-photo-4666753.jpeg?auto=compress&cs=tinysrgb&w=200',
+        photo:
+          'https://images.pexels.com/photos/4666753/pexels-photo-4666753.jpeg?auto=compress&cs=tinysrgb&w=200',
       },
       {
         name: 'David Williams',
@@ -80,11 +81,12 @@ export default function Home() {
         story:
           '“We found the right dog for us in no time and the staff were so helpful throughout the process. Thank you!”',
         rating: 5,
-        photo: 'https://images.pexels.com/photos/1704488/pexels-photo-1704488.jpeg?auto=compress&cs=tinysrgb&w=200',
+        photo:
+          'https://images.pexels.com/photos/1704488/pexels-photo-1704488.jpeg?auto=compress&cs=tinysrgb&w=200',
       },
     ],
     [],
-  );
+  )
 
 
   const successStoriesDisplay = useMemo(() => {
@@ -186,38 +188,32 @@ export default function Home() {
           <h2 style={{ fontSize: '2.1rem', margin: '0 0 12px', color: '#253b2f' }}>Featured Pets</h2>
           <p style={{ color: '#5e7263', margin: '0 0 32px', fontSize: 16 }}>Meet some of our adorable pets looking for homes</p>
           <div style={{ display: 'grid', gap: 28, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-            {loading ? (
-              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px 0', color: '#5e7263' }}>Loading featured pets…</div>
-            ) : featuredPets.length === 0 ? (
-              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px 0', color: '#5e7263' }}>No pets available yet.</div>
-            ) : (
-              featuredPets.map((pet, index) => (
-                <div key={pet.id ?? `${pet.name}-${index}`} style={{ background: '#fff', borderRadius: 20, boxShadow: '0 8px 28px rgba(84,135,104,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 320 }}>
-                  {pet.imageUrl ? (
-                    <img src={pet.imageUrl} alt={pet.name} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: '100%', height: 160, background: 'linear-gradient(135deg, #e8f5e9 0%, #f1efe6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}>🐾</div>
-                  )}
-                  <div style={{ padding: 18 }}>
-                    <div style={{ fontWeight: 700, fontSize: 17 }}>{pet.name}</div>
-                    <div style={{ color: '#5e7263', fontSize: 14, marginBottom: 8 }}>{pet.breed} - {pet.age}</div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {pet.tags?.map(tag => <span key={tag} style={{ background: '#f1efe6', borderRadius: 999, padding: '4px 12px', fontWeight: 600, fontSize: 13 }}>{tag}</span>)}
-                    </div>
-                  </div>
-                  <div style={{ borderTop: '1px solid #f1efe6', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 600, color: '#4f8a3a', fontSize: 15 }}>Ready for adoption</span>
-                    <button
-                      type="button"
-                      onClick={() => setQuickViewPet(pet)}
-                      style={{ background: 'var(--color-cta)', color: '#fff', borderRadius: 999, fontWeight: 600, padding: '8px 22px', border: 'none', cursor: 'pointer' }}
-                    >
-                      View
-                    </button>
+            {featuredPetsDisplay.map((pet, index) => (
+              <div key={pet.id ?? `${pet.name}-${index}`} style={{ background: '#fff', borderRadius: 20, boxShadow: '0 8px 28px rgba(84,135,104,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 320 }}>
+                <img src={pet.imageUrl || pet.img} alt={pet.name} onError={handleImageError} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
+                <div style={{ padding: 18 }}>
+                  <div style={{ fontWeight: 700, fontSize: 17 }}>{pet.name}</div>
+                  <div style={{ color: '#5e7263', fontSize: 14, marginBottom: 8 }}>{pet.breed} - {pet.age}</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {(pet.tags || pet.traits || []).map(trait => (
+                      <span key={trait} style={{ background: '#f1efe6', borderRadius: 999, padding: '4px 12px', fontWeight: 600, fontSize: 13 }}>{trait}</span>
+                    ))}
                   </div>
                 </div>
-              ))
-            )}
+                <div style={{ borderTop: '1px solid #f1efe6', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 600, color: '#4f8a3a', fontSize: 15 }}>
+                    {pet.status === 'Adopted' ? 'Adopted' : 'Ready for adoption'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuickViewPet({ ...pet, imageUrl: pet.imageUrl || pet.img })}
+                    style={{ background: 'var(--color-cta)', color: '#fff', borderRadius: 999, fontWeight: 600, padding: '8px 22px', border: 'none', cursor: 'pointer' }}
+                  >
+                    View
+                  </button>
+                </div>
+              </div>
+            ))}
             {quickViewPet && (
               <PetQuickView pet={quickViewPet} onClose={() => setQuickViewPet(null)} />
             )}

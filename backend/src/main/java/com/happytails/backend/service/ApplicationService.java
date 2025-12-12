@@ -67,6 +67,13 @@ public class ApplicationService {
         Optional<Application> o = applicationRepository.findById(applicationId);
         if (o.isEmpty()) throw new IllegalArgumentException("Application not found");
         Application app = o.get();
+
+        // Do not allow changing status once it has reached a terminal state
+        if (app.getStatus() == Application.ApplicationStatus.Approved
+                || app.getStatus() == Application.ApplicationStatus.Rejected) {
+            throw new IllegalStateException("Cannot change status after it has been " + app.getStatus());
+        }
+
         app.setStatus(newStatus);
 
         // when approved, set pet adopted and link adopter to pet
