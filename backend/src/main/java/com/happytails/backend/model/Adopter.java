@@ -37,12 +37,10 @@ public class Adopter {
     @Column(name = "profile_pet_experience", columnDefinition = "TEXT")
     private String profilePetExperience;
 
-    @OneToMany(mappedBy = "adopter")
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "adopter", fetch = FetchType.EAGER)
     private Set<Application> applications;
 
-    @OneToMany(mappedBy = "adopter")
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "adopter", fetch = FetchType.EAGER)
     private Set<Pet> adoptedPets;
 
     @CreationTimestamp
