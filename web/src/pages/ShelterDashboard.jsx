@@ -189,6 +189,11 @@ export default function ShelterDashboard() {
 
   const handleStaffSave = async () => {
     try {
+      if (staffForm.phoneNumber && !/^\d+$/.test(staffForm.phoneNumber)) {
+        setError('Phone number must contain digits only.')
+        return
+      }
+
       const payload = {}
       if (staffForm.email && staffForm.email !== staffProfile?.email) payload.email = staffForm.email
       if (staffForm.password) payload.password = staffForm.password
@@ -215,6 +220,11 @@ export default function ShelterDashboard() {
 
   const handleShelterSave = async () => {
     try {
+      if (shelterForm.contactInfo && !/^\d+$/.test(shelterForm.contactInfo)) {
+        setError('Contact information must contain digits only.')
+        return
+      }
+
       const payload = {
         name: shelterForm.name,
         location: shelterForm.location,
@@ -449,7 +459,13 @@ export default function ShelterDashboard() {
               <input
                 type="tel"
                 value={staffForm.phoneNumber}
-                onChange={(e) => setStaffForm((prev) => ({ ...prev, phoneNumber: e.target.value }))}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={20}
+                onChange={(e) => {
+                  const next = e.target.value.replace(/\D/g, '')
+                  setStaffForm((prev) => ({ ...prev, phoneNumber: next }))
+                }}
                 className="input"
                 style={{ borderRadius: 14, padding: '12px 16px', border: '1px solid rgba(84,135,104,0.25)' }}
               />
@@ -504,7 +520,13 @@ export default function ShelterDashboard() {
               <input
                 type="text"
                 value={shelterForm.contactInfo}
-                onChange={(e) => setShelterForm((prev) => ({ ...prev, contactInfo: e.target.value }))}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={255}
+                onChange={(e) => {
+                  const next = e.target.value.replace(/\D/g, '')
+                  setShelterForm((prev) => ({ ...prev, contactInfo: next }))
+                }}
                 className="input"
                 style={{ borderRadius: 14, padding: '12px 16px', border: '1px solid rgba(84,135,104,0.25)' }}
               />
