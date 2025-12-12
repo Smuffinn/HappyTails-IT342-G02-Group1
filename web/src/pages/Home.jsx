@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { petService } from '../services/petservice'
 import PetQuickView from '../modules/pets/PetQuickView.jsx'
+import PetCard from '../components/PetCard.jsx'
 
 
 export default function Home() {
@@ -49,6 +50,7 @@ export default function Home() {
     event.currentTarget.onerror = null
   }
 
+  
   const successStories = useMemo(
     () => [
       {
@@ -90,14 +92,6 @@ export default function Home() {
     ],
     [],
   )
-
-
-  const featuredPetsDisplay = useMemo(() => {
-    if (featuredPets.length >= 6) return featuredPets
-    const needed = 6 - featuredPets.length
-    return [...featuredPets, ...featuredPets.slice(0, needed)]
-  }, [featuredPets])
-
   const successStoriesDisplay = useMemo(() => {
     if (successStories.length >= 6) return successStories;
     const needed = 6 - successStories.length;
@@ -205,8 +199,7 @@ export default function Home() {
               featuredPets.map((pet, index) => (
                 <PetCard
                   key={pet.id ?? `${pet.name}-${index}`}
-                  pet={pet}
-                  onApply={() => setQuickViewPet(pet)}
+                  pet={{ ...pet, onApply: () => setQuickViewPet(pet) }}
                 />
               ))
             )}
