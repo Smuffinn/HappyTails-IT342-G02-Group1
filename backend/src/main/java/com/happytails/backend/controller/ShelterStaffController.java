@@ -1,5 +1,6 @@
 package com.happytails.backend.controller;
 
+import com.happytails.backend.dto.StaffProfileResponse;
 import com.happytails.backend.dto.UpdateShelterRequest;
 import com.happytails.backend.dto.UpdateStaffProfileRequest;
 import com.happytails.backend.dto.ChangePasswordRequest;
@@ -21,18 +22,18 @@ public class ShelterStaffController {
 
     // Get current staff profile
     @GetMapping("/me")
-    public ResponseEntity<ShelterStaff> getCurrentStaff() {
+    public ResponseEntity<StaffProfileResponse> getCurrentStaff() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         ShelterStaff staff = shelterStaffService.getStaffByEmail(email);
-        return ResponseEntity.ok(staff);
+        return ResponseEntity.ok(StaffProfileResponse.from(staff));
     }
 
     // Update current staff profile (FR-4)
     @PutMapping("/me")
-    public ResponseEntity<ShelterStaff> updateCurrentStaff(@Valid @RequestBody UpdateStaffProfileRequest request) {
+    public ResponseEntity<StaffProfileResponse> updateCurrentStaff(@Valid @RequestBody UpdateStaffProfileRequest request) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         ShelterStaff updatedStaff = shelterStaffService.updateStaffProfile(email, request);
-        return ResponseEntity.ok(updatedStaff);
+        return ResponseEntity.ok(StaffProfileResponse.from(updatedStaff));
     }
 
     // Change current staff password

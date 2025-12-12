@@ -98,6 +98,10 @@ export default function Home() {
     return [...successStories, ...successStories.slice(0, needed)];
   }, [successStories]);
 
+  const featuredPetsDisplay = useMemo(() => {
+    return featuredPets.slice(0, 6);
+  }, [featuredPets]);
+
   const requireAuth = (path) => {
     if (isStaff) {
       setAuthMessage('Shelter accounts manage adoptions through the profile instead of the adopter quiz.')
