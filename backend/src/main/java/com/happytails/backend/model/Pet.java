@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Entity
 @Table(name = "pet")
 @Getter
@@ -57,6 +60,7 @@ public class Pet {
     private PetGender gender;
 
     @Column(name = "photos_json", columnDefinition = "json")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String photosJson;
 
     @ManyToOne
