@@ -54,74 +54,74 @@ INSERT INTO adopter (email, password, profile_personal_info, profile_residence_d
 
 INSERT INTO pet (shelter_id, name, species, breed, age, size, gender, status, description, temperament, photos_json) VALUES
 -- Happy Paws Shelter Pets
-(1, 'Luna', 'Dog', 'Golden Retriever', '2 years', 'Large', 'Female', 'Available', 
+(1, 'Luna', 'Dog', 'Golden Retriever', '2 years', 'Large', 'Female', 'Available',
  'Luna is a friendly and energetic golden retriever who loves to play fetch and go on walks. She is great with children and other dogs.',
- 'Friendly, Playful, Energetic', 
- '["https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=400"]'),
+ 'Friendly, Playful, Energetic',
+ '["/uploads/pet1.jpg"]'),
 
 (1, 'Max', 'Dog', 'Beagle', '3 years', 'Medium', 'Male', 'Available',
  'Max is a curious and friendly beagle who loves to explore. He is well-trained and gets along with other pets.',
  'Curious, Friendly, Gentle',
- '["https://images.unsplash.com/photo-1505628346881-b72b27e84530?w=400"]'),
+ '["/uploads/pet2.jpg"]'),
 
 (1, 'Whiskers', 'Cat', 'Tabby Mix', '1 year', 'Small', 'Male', 'Available',
  'Whiskers is a playful young cat who loves to chase toys and take naps in sunny spots. He is independent but affectionate.',
  'Playful, Independent, Affectionate',
- '["https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400"]'),
+ '["/uploads/pet3.jpg"]'),
 
 -- Cebu Animal Rescue Pets
 (2, 'Bella', 'Dog', 'French Bulldog', '4 years', 'Small', 'Female', 'Available',
  'Bella is a sweet and affectionate French Bulldog who loves to cuddle and be around people. Perfect for apartment living.',
  'Affectionate, Calm, Loyal',
- '["https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=400"]'),
+ '["/uploads/pet4.jpg"]'),
 
 (2, 'Charlie', 'Dog', 'Labrador Mix', '5 years', 'Large', 'Male', 'Available',
  'Charlie is a loyal and calm companion who enjoys leisurely walks and relaxing at home. Great for families.',
  'Loyal, Calm, Gentle',
- '["https://images.unsplash.com/photo-1558788353-f76d92427f16?w=400"]'),
+ '["/uploads/pet5.jpg"]'),
 
 (2, 'Mittens', 'Cat', 'Siamese', '2 years', 'Medium', 'Female', 'Available',
  'Mittens is a vocal and social Siamese cat who loves attention and conversation. She is very intelligent and trainable.',
  'Vocal, Social, Intelligent',
- '["https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=400"]'),
+ '["/uploads/pet6.jpg"]'),
 
 -- Pet Haven Cebu Pets
 (3, 'Rocky', 'Dog', 'German Shepherd', '3 years', 'Large', 'Male', 'Available',
  'Rocky is a protective and intelligent German Shepherd who makes an excellent guard dog. He is loyal and trainable.',
  'Protective, Intelligent, Loyal',
- '["https://images.unsplash.com/photo-1568572933382-74d440642117?w=400"]'),
+ '["/uploads/pet7.jpg"]'),
 
 (3, 'Daisy', 'Dog', 'Poodle Mix', '2 years', 'Small', 'Female', 'Available',
  'Daisy is a cheerful and energetic small dog who loves to play and be the center of attention. Great with kids.',
  'Cheerful, Energetic, Playful',
- '["https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=400"]'),
+ '["/uploads/pet8.jpg"]'),
 
 (3, 'Shadow', 'Cat', 'Black Domestic Shorthair', '3 years', 'Medium', 'Male', 'Available',
  'Shadow is a mysterious and independent black cat who enjoys quiet environments. He is affectionate once he trusts you.',
  'Independent, Calm, Mysterious',
- '["https://images.unsplash.com/photo-1529257414772-1960b7bea4eb?w=400"]'),
+ '["/uploads/pet1.jpg"]'),
 
 -- Guardian Angels Pets
 (4, 'Buddy', 'Dog', 'Mixed Breed', '6 years', 'Medium', 'Male', 'Available',
  'Buddy is a senior dog with a heart of gold. He is calm, well-behaved, and looking for a quiet home to spend his golden years.',
  'Calm, Gentle, Sweet',
- '["https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400"]'),
+ '["/uploads/pet2.jpg"]'),
 
 (4, 'Coco', 'Rabbit', 'Lop-Eared', '1 year', 'Small', 'Female', 'Available',
  'Coco is a gentle and quiet rabbit who loves fresh vegetables and hopping around in a safe space. Perfect for calm households.',
  'Gentle, Quiet, Sweet',
- '["https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400"]'),
+ '["/uploads/pet3.jpg"]'),
 
 -- Hope for Paws Cebu Pets
 (5, 'Tweety', 'Bird', 'Canary', '1 year', 'Small', 'Male', 'Available',
  'Tweety is a cheerful canary with a beautiful singing voice. He brings joy and music to any home.',
  'Cheerful, Active, Musical',
- '["https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=400"]'),
+ '["/uploads/pet4.jpg"]'),
 
 (5, 'Sassy', 'Cat', 'Persian', '4 years', 'Medium', 'Female', 'Available',
  'Sassy is a beautiful Persian cat who enjoys grooming and pampering. She is calm and prefers a quiet environment.',
  'Calm, Reserved, Elegant',
- '["https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=400"]');
+ '["/uploads/pet5.jpg"]');
 
 -- ========================================
 -- 5. SAMPLE APPLICATIONS
@@ -166,8 +166,8 @@ INSERT INTO application (adopter_id, pet_id, status, supplementary_answers, subm
 --    Use: https://bcrypt-generator.com/
 --    Or: Register via API and check database
 --
--- 3. Photo URLs use Unsplash placeholder images
---    Replace with actual uploaded photos in production
+-- 3. Photo URLs use local default images from /backend/uploads/
+--    Replace with actual uploaded photos when adding new pets
 --
 -- 4. All timestamps use CURRENT_TIMESTAMP
 --    Adjust if needed for testing time-based features
