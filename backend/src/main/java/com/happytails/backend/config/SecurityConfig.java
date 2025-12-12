@@ -49,10 +49,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/register-staff").permitAll()
                         .requestMatchers("/api/shelters/**").permitAll()
                         .requestMatchers("/api/pets/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/applications/count/**").permitAll()
                         .requestMatchers("/api/staff/**").authenticated()
                         .requestMatchers("/api/adopters/**").authenticated()
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
 
                 // Add JWT filter before UsernamePasswordAuthenticationFilter
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

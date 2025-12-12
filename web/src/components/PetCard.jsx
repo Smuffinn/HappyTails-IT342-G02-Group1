@@ -1,15 +1,17 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import applicationService from '../services/applicationService'
 
 /**
  * PetCard
- * Props: { pet }
+ * Props: { pet, showApplicationCount }
  * pet: { id, name, breed, age, size, imageUrl, tags }
  */
-export default function PetCard({ pet = {} }) {
+export default function PetCard({ pet = {}, showApplicationCount = false }) {
   const navigate = useNavigate()
   const { isAuthenticated, isAdopter } = useAuth()
+  const [applicationCount, setApplicationCount] = useState(null)
   const {
     name = 'Unknown',
     breed = '',
@@ -18,6 +20,16 @@ export default function PetCard({ pet = {} }) {
     imageUrl = '',
     tags = [],
   } = pet
+
+  useEffect(() => {
+    if (!showApplicationCount) return
+    const petId = pet.raw?.petId ?? pet.id
+    if (!petId) return
+
+    applicationService.getApplicationCount(petId).then(count => {
+      setApplicationCount(count)
+    })
+  }, [pet, showApplicationCount])
 
   const handleApply = useCallback(() => {
     const targetPet = pet.raw ?? pet
@@ -75,18 +87,20 @@ export default function PetCard({ pet = {} }) {
         <p className="text-sm text-slate-500 mt-1">{breed}</p>
         <p className="text-sm text-slate-400 mt-2">{age} • {size}</p>
 
-        <div className="mt-3">
-          <span className={`text-xs uppercase font-medium px-2 py-1 rounded ${
-            pet?.raw?.status === 'Available'
-              ? 'text-emerald-700 bg-emerald-100'
-              : pet?.raw?.status === 'Adopted'
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className={`text-xs uppercase font-medium px-2 py-1 rounded ${(pet?.raw?.status === 'Available' || pet?.raw?.status === 'Pending')
+            ? 'text-emerald-700 bg-emerald-100'
+            : pet?.raw?.status === 'Adopted'
               ? 'text-slate-700 bg-slate-100'
-              : pet?.raw?.status === 'Pending'
-              ? 'text-amber-700 bg-amber-100'
               : 'text-slate-700 bg-slate-100'
-          }`}>
-            {pet?.raw?.status ?? 'Unknown'}
+            }`}>
+            {(pet?.raw?.status === 'Available' || pet?.raw?.status === 'Pending') ? 'Available' : (pet?.raw?.status ?? 'Unknown')}
           </span>
+          {showApplicationCount && applicationCount !== null && (
+            <span className="text-xs font-medium px-2 py-1 rounded bg-blue-100 text-blue-700">
+              📋 {applicationCount} {applicationCount === 1 ? 'application' : 'applications'}
+            </span>
+          )}
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -111,12 +125,12 @@ export default function PetCard({ pet = {} }) {
             const isAuthenticated = !!token
             const status = pet?.raw?.status || ''
 
-            if (status === 'Available') {
+            if (status === 'Available' || status === 'Pending') {
               // allow parent to override handling via pet.onApply
               if (typeof pet.onApply === 'function') {
                 return (
                   <div className="mt-4">
-                    <button onClick={() => pet.onApply(pet)} className="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700 transition-colors">
+                    <button onClick={() => pet.onApply(pet)} className="px-4 py-2 border-2 border-emerald-600 text-emerald-800 rounded-full text-sm font-semibold bg-transparent hover:bg-emerald-50 transition-colors">
                       Apply to Adopt
                     </button>
                   </div>
@@ -127,7 +141,7 @@ export default function PetCard({ pet = {} }) {
                 <div className="mt-4">
                   <button
                     onClick={handleApply}
-                    className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition-colors"
+                    className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 border-emerald-600 text-emerald-800 text-sm font-semibold bg-transparent hover:bg-emerald-50 transition-colors"
                   >
                     Apply to Adopt
                   </button>

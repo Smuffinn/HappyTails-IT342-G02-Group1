@@ -43,6 +43,16 @@ const applicationService = {
       const msg = (payload && (payload.error || payload.message)) || err.message || String(err)
       throw new Error(msg)
     }
+  },
+
+  getApplicationCount: async (petId) => {
+    try {
+      const res = await api.get(`/applications/count/${petId}`)
+      return res.data
+    } catch (err) {
+      console.error('Error fetching application count:', err)
+      return 0
+    }
   }
 }
 

@@ -9,6 +9,8 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/pets
     envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
       - key: DATABASE_URL
         fromDatabase:
           name: happytails-db
@@ -50,3 +52,4 @@ databases:
     databaseName: happytails
     plan: free
     region: singapore
+

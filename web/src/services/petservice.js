@@ -33,7 +33,9 @@ export const petService = {
         try {
           if (p.photosJson) {
             const arr = typeof p.photosJson === 'string' ? JSON.parse(p.photosJson) : p.photosJson;
-            if (Array.isArray(arr) && arr.length > 0) imageUrl = arr[0];
+            if (Array.isArray(arr) && arr.length > 0) {
+              imageUrl = arr[0]; // Use the first image URL directly
+            }
           }
         } catch (e) {
           imageUrl = '';

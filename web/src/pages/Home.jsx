@@ -50,7 +50,7 @@ export default function Home() {
     event.currentTarget.onerror = null
   }
 
-  
+
   const successStories = useMemo(
     () => [
       {
@@ -194,7 +194,7 @@ export default function Home() {
         <section style={{ background: '#f9f6ef', borderRadius: 28, padding: '40px clamp(28px, 6vw, 72px)', marginBottom: 56 }}>
           <h2 style={{ fontSize: '2.1rem', margin: '0 0 12px', color: '#253b2f' }}>Featured Pets</h2>
           <p style={{ color: '#5e7263', margin: '0 0 32px', fontSize: 16 }}>Meet some of our adorable pets looking for homes</p>
-          <div style={{ display: 'grid', gap: 28, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+          <div style={{ display: 'grid', gap: 28, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 280px))' }}>
             {loading ? (
               <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px 0', color: '#5e7263' }}>Loading featured pets…</div>
             ) : featuredPets.length === 0 ? (
@@ -204,6 +204,7 @@ export default function Home() {
                 <PetCard
                   key={pet.id ?? `${pet.name}-${index}`}
                   pet={{ ...pet, onApply: () => setQuickViewPet(pet) }}
+                  showApplicationCount={true}
                 />
               ))
             )}

@@ -10,5 +10,8 @@ import java.util.List;
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     // Example custom queries
     List<Application> findByAdopterAdopterId(Long adopterId);
+
     List<Application> findByPetPetId(Long petId);
+
+    long countByPetPetId(Long petId);
 }

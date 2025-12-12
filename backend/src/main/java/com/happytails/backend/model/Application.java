@@ -1,6 +1,6 @@
 package com.happytails.backend.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,7 +19,7 @@ public class Application {
 
     @ManyToOne
     @JoinColumn(name = "adopter_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnoreProperties({ "applications", "adoptedPets", "password" })
     private Adopter adopter;
 
     @ManyToOne

@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { petService } from '../services/petservice'
 import PetQuickView from '../modules/pets/PetQuickView.jsx'
 import PetCard from '../components/PetCard.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function DiscoverPage() {
+  const { isStaff } = useAuth()
   const [pets, setPets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -243,12 +245,13 @@ export default function DiscoverPage() {
           </div>
         ) : (
           <>
-            <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32, marginTop: 8 }}>
+            <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 280px))', gap: 32, marginTop: 8 }}>
               {filteredPets.map((pet, index) => (
                 <PetCard
                   key={pet.id ?? pet.name ?? index}
                   pet={pet}
                   onApply={() => setQuickViewPet(pet)}
+                  showApplicationCount={true}
                 />
               ))}
             </section>

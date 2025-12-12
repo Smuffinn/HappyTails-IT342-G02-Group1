@@ -39,14 +39,19 @@ export default function Header() {
       items.push({ to: '/applications', label: 'Shelter Applications' })
       items.push({ to: '/shelter/dashboard', label: 'Shelter Dashboard' })
       items.push({ to: '/profile', label: 'Profile' })
-    } else {
+    } else if (isAuthenticated) {
+      // Authenticated adopters
       items.push({ to: '/applications', label: 'My Applications' })
       items.push({ to: '/profile', label: 'Profile' })
+      items.push({ to: '/quiz', label: 'Quiz' })
+    } else {
+      // Unauthenticated users
       items.push({ to: '/quiz', label: 'Quiz' })
     }
 
     return items
-  }, [isStaff])
+  }, [isAuthenticated, isStaff])
+
 
   const handleLogout = () => {
     logout()

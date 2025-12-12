@@ -39,19 +39,23 @@ public class ApplicationController {
     @GetMapping("/me")
     public ResponseEntity<?> getMyApplications() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (email == null) return ResponseEntity.status(401).build();
+        if (email == null)
+            return ResponseEntity.status(401).build();
         Optional<Adopter> aOpt = adopterRepository.findByEmail(email);
-        if (aOpt.isEmpty()) return ResponseEntity.status(404).body("Adopter not found");
+        if (aOpt.isEmpty())
+            return ResponseEntity.status(404).body("Adopter not found");
         return ResponseEntity.ok(applicationService.getApplicationsForAdopter(aOpt.get().getAdopterId()));
     }
 
     @GetMapping("/shelter")
     public ResponseEntity<?> getApplicationsForMyShelter() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (email == null) return ResponseEntity.status(401).build();
+        if (email == null)
+            return ResponseEntity.status(401).build();
         Optional<ShelterStaff> sOpt = shelterStaffRepository.findByEmail(email);
-        if (sOpt.isEmpty()) return ResponseEntity.status(403).body("Not shelter staff or shelter not found");
-        
+        if (sOpt.isEmpty())
+            return ResponseEntity.status(403).body("Not shelter staff or shelter not found");
+
         Long shelterId = sOpt.get().getShelter().getShelterId();
         return ResponseEntity.ok(applicationService.getApplicationsForShelter(shelterId));
     }
@@ -60,11 +64,14 @@ public class ApplicationController {
     @PostMapping
     public ResponseEntity<?> submitApplication(@Valid @RequestBody ApplicationRequest req) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (email == null) return ResponseEntity.status(401).build();
+        if (email == null)
+            return ResponseEntity.status(401).build();
         Optional<Adopter> aOpt = adopterRepository.findByEmail(email);
-        if (aOpt.isEmpty()) return ResponseEntity.status(404).body("Adopter not found");
+        if (aOpt.isEmpty())
+            return ResponseEntity.status(404).body("Adopter not found");
         try {
-            Application created = applicationService.submitApplication(aOpt.get().getAdopterId(), req.getPetId(), req.getSupplementaryAnswers());
+            Application created = applicationService.submitApplication(aOpt.get().getAdopterId(), req.getPetId(),
+                    req.getSupplementaryAnswers());
             return ResponseEntity.status(201).body(created);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
@@ -74,13 +81,15 @@ public class ApplicationController {
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable Long id, @Valid @RequestBody StatusUpdateRequest statusReq) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return ResponseEntity.status(401).build();
+        if (auth == null)
+            return ResponseEntity.status(401).build();
 
         boolean isStaff = auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(role -> role.equals("ROLE_STAFF"));
 
-        if (!isStaff) return ResponseEntity.status(403).body("Only shelter staff can change application status");
+        if (!isStaff)
+            return ResponseEntity.status(403).body("Only shelter staff can change application status");
 
         try {
             Application.ApplicationStatus newStatus = Application.ApplicationStatus.valueOf(statusReq.getStatus());
@@ -89,5 +98,10 @@ public class ApplicationController {
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body("Invalid status value");
         }
+    }
+
+    @GetMapping("/count/{petId}")
+    public ResponseEntity<Long> getApplicationCountForPet(@PathVariable Long petId) {
+        return ResponseEntity.ok(applicationService.getApplicationCountForPet(petId));
     }
 }

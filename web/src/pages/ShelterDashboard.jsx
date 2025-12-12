@@ -20,7 +20,7 @@ const emptyPetForm = {
 
 export default function ShelterDashboard() {
   const navigate = useNavigate()
-  const { initializing, isStaff } = useAuth()
+  const { initializing, isAuthenticated, isStaff } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -55,6 +55,10 @@ export default function ShelterDashboard() {
 
   useEffect(() => {
     if (initializing) return
+    if (!isAuthenticated) {
+      navigate('/login', { replace: true, state: { from: '/shelter/dashboard' } })
+      return
+    }
     if (!isStaff) {
       navigate('/', { replace: true })
       return
@@ -506,37 +510,44 @@ export default function ShelterDashboard() {
               />
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Age <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(text)</span></label>
+              <label>Age <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(number)</span></label>
               <input
-                type="text"
+                type="number"
                 value={petForm.age}
                 onChange={(e) => setPetForm((prev) => ({ ...prev, age: e.target.value }))}
                 className="input"
                 style={{ borderRadius: 14, padding: '12px 16px', border: '1px solid rgba(84,135,104,0.25)' }}
-                placeholder="e.g. 2 years"
+                placeholder="e.g. 2"
+                min="0"
               />
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Size <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(text)</span></label>
-              <input
-                type="text"
+              <label>Size <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(dropdown)</span></label>
+              <select
                 value={petForm.size}
                 onChange={(e) => setPetForm((prev) => ({ ...prev, size: e.target.value }))}
                 className="input"
-                placeholder="Small, Medium, Large"
                 style={{ borderRadius: 14, padding: '12px 16px', border: '1px solid rgba(84,135,104,0.25)' }}
-              />
+              >
+                <option value="">Select size</option>
+                <option value="Small">Small</option>
+                <option value="Medium">Medium</option>
+                <option value="Large">Large</option>
+              </select>
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Gender <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(text)</span></label>
-              <input
-                type="text"
+              <label>Gender <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(dropdown)</span></label>
+              <select
                 value={petForm.gender}
                 onChange={(e) => setPetForm((prev) => ({ ...prev, gender: e.target.value }))}
                 className="input"
-                placeholder="Male, Female, Unknown"
                 style={{ borderRadius: 14, padding: '12px 16px', border: '1px solid rgba(84,135,104,0.25)' }}
-              />
+              >
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Others">Others</option>
+              </select>
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
               <label>Description <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(text)</span></label>
@@ -639,55 +650,6 @@ export default function ShelterDashboard() {
           </form>
         </section>
 
-        {pets.length > 0 && (
-          <section className="surface-card" style={{ padding: '28px clamp(24px, 5vw, 40px)', borderRadius: 26, display: 'grid', gap: 18 }}>
-            <div style={{ display: 'grid', gap: 6 }}>
-              <h2 style={{ margin: 0, fontSize: '1.6rem', color: '#253b2f' }}>Current pet listings</h2>
-              <p style={{ margin: 0, color: '#5e7263' }}>Update statuses as applications arrive so adopters see accurate availability.</p>
-            </div>
-
-            <div style={{ display: 'grid', gap: 16 }}>
-              {pets.map((pet) => (
-                <article key={pet.id} style={{ borderRadius: 22, border: '1px solid rgba(84,135,104,0.15)', background: '#fff', padding: '20px 22px', display: 'grid', gap: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                    <div style={{ display: 'grid', gap: 6 }}>
-                      <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <h3 style={{ margin: 0, fontSize: '1.4rem', color: '#253b2f' }}>{pet.name}</h3>
-                        <span style={{ ...chipStyle, background: 'rgba(84,135,104,0.12)', color: '#4f8a3a' }}>{pet.raw?.status || 'Unknown'}</span>
-                      </div>
-                      <span style={{ color: '#5e7263' }}>{[pet.breed, pet.age, pet.raw?.species].filter(Boolean).join(' • ')}</span>
-                      <p style={{ margin: 0, color: '#5e7263' }}>{pet.raw?.description}</p>
-                    </div>
-                    {pet.imageUrl && (
-                      <img src={pet.imageUrl} alt={pet.name} style={{ width: 100, height: 100, borderRadius: 16, objectFit: 'cover' }} />
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <label style={{ fontSize: 14, color: '#5e7263' }}>Change status:</label>
-                    {statusOptions.map((status) => (
-                      <button
-                        key={status}
-                        type="button"
-                        onClick={() => handleStatusChange(pet.id, status)}
-                        className="btn btn-outline"
-                        style={{
-                          borderColor: pet.raw?.status === status ? '#78c977' : 'rgba(84,135,104,0.25)',
-                          color: pet.raw?.status === status ? '#2a5f24' : '#4f8a3a',
-                          background: pet.raw?.status === status ? 'rgba(120,201,119,0.16)' : 'transparent',
-                        }}
-                      >
-                        {status}
-                      </button>
-                    ))}
-                    <button type="button" className="btn btn-primary" onClick={() => handlePetEdit(pet)}>
-                      Edit details
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-        )}
       </main>
     </div>
   )
@@ -701,4 +663,12 @@ const textAreaStyle = {
   fontFamily: 'inherit',
   fontSize: '1rem',
   background: '#fff',
+}
+
+const chipStyle = {
+  display: 'inline-block',
+  padding: '4px 12px',
+  borderRadius: 999,
+  fontSize: '0.85rem',
+  fontWeight: 600,
 }

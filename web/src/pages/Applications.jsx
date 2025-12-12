@@ -1,8 +1,10 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import applicationService from '../services/applicationService'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Applications() {
+  const navigate = useNavigate()
   const { isStaff, isAuthenticated, initializing } = useAuth()
   const [apps, setApps] = useState([])
   const [loading, setLoading] = useState(true)
@@ -15,6 +17,11 @@ export default function Applications() {
       label: 'Received',
       badge: 'bg-slate-100 text-slate-700 border border-slate-200',
       button: 'bg-slate-500 hover:bg-slate-600',
+    },
+    Interview_Scheduled: {
+      label: 'Interview Scheduled',
+      badge: 'bg-indigo-100 text-indigo-700 border border-indigo-200',
+      button: 'bg-indigo-600 hover:bg-indigo-700',
     },
     Approved: {
       label: 'Approved',
@@ -31,8 +38,7 @@ export default function Applications() {
   useEffect(() => {
     if (initializing) return
     if (!isAuthenticated) {
-      setError(new Error('Please sign in to view your applications.'))
-      setLoading(false)
+      navigate('/login', { replace: true, state: { from: '/applications' } })
       return
     }
     let mounted = true
@@ -70,6 +76,7 @@ export default function Applications() {
   const staffActions = useMemo(
     () => [
       { value: 'Received' },
+      { value: 'Interview_Scheduled' },
       { value: 'Approved' },
       { value: 'Rejected' },
     ],
@@ -122,11 +129,10 @@ export default function Applications() {
 
         {statusNotice && (
           <div
-            className={`mb-6 rounded-2xl px-4 py-3 text-sm font-medium shadow-sm ${
-              statusNotice.type === 'success'
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                : 'bg-rose-50 text-rose-700 border border-rose-200'
-            }`}
+            className={`mb-6 rounded-2xl px-4 py-3 text-sm font-medium shadow-sm ${statusNotice.type === 'success'
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              : 'bg-rose-50 text-rose-700 border border-rose-200'
+              }`}
           >
             {statusNotice.message}
           </div>
@@ -153,9 +159,8 @@ export default function Applications() {
                   {/* Status badge pinned upper-right */}
                   <div className="absolute top-6 right-6 flex flex-col items-end gap-3">
                     <span
-                      className={`inline-flex items-center gap-2 rounded-full px-4 py-1 text-sm font-semibold ${
-                        meta.badge || 'bg-slate-100 text-slate-700 border border-slate-200'
-                      }`}
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-1 text-sm font-semibold ${meta.badge || 'bg-slate-100 text-slate-700 border border-slate-200'
+                        }`}
                     >
                       <span className="text-base" aria-hidden>
                         {a.status === 'Approved' ? '✅' : a.status === 'Rejected' ? '❌' : '📄'}
@@ -175,9 +180,8 @@ export default function Applications() {
                             value={a.status || 'Received'}
                             onChange={(e) => changeStatus(a.applicationId, e.target.value)}
                             disabled={isChanging}
-                            className={`w-full appearance-none rounded-2xl border bg-white px-4 py-2 pr-10 text-sm font-semibold text-slate-800 shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 ${
-                              isChanging ? 'cursor-not-allowed opacity-60' : 'hover:border-emerald-200'
-                            }`}
+                            className={`w-full appearance-none rounded-2xl border bg-white px-4 py-2 pr-10 text-sm font-semibold text-slate-800 shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 ${isChanging ? 'cursor-not-allowed opacity-60' : 'hover:border-emerald-200'
+                              }`}
                           >
                             {staffActions.map(({ value }) => (
                               <option key={value} value={value}>

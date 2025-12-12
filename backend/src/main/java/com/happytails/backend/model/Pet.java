@@ -1,6 +1,5 @@
 package com.happytails.backend.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -20,7 +19,7 @@ public class Pet {
 
     @ManyToOne
     @JoinColumn(name = "shelter_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnoreProperties({ "pets", "staff" })
     private Shelter shelter;
 
     @Column(name = "name", length = 100, nullable = false)
@@ -62,7 +61,7 @@ public class Pet {
 
     @ManyToOne
     @JoinColumn(name = "adopter_id")
-    @JsonIgnoreProperties(value = {"applications", "adoptedPets"}, allowSetters = true)
+    @JsonIgnoreProperties(value = { "applications", "adoptedPets" }, allowSetters = true)
     private Adopter adopter;
 
     public enum PetStatus {

@@ -249,6 +249,11 @@ export default function AdoptionForm() {
               <div style={{ display: 'grid', gap: 6 }}>
                 <h2 style={{ margin: 0, fontSize: '1.6rem', color: '#253b2f' }}>{pet.name}</h2>
                 <p style={{ margin: 0, color: '#5e7263' }}>{[pet.breed, pet.age, pet.raw?.species].filter(Boolean).join(' • ')}</p>
+                {pet.shelterName && (
+                  <p style={{ margin: 0, color: '#4f8a3a', fontSize: 14, fontWeight: 600 }}>
+                    🏠 {pet.shelterName}
+                  </p>
+                )}
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   {(pet.tags || []).slice(0, 4).map((tag) => (
                     <span key={tag} style={{ background: '#f1efe6', borderRadius: 999, padding: '6px 16px', fontWeight: 600, fontSize: 13, color: '#4f8a3a' }}>

@@ -24,7 +24,6 @@ public class ApplicationService {
     @Autowired
     private PetRepository petRepository;
 
-
     public List<Application> getAllApplications() {
         return applicationRepository.findAll();
     }
@@ -32,7 +31,8 @@ public class ApplicationService {
     public Application submitApplication(Long adopterId, Long petId, String supplementaryAnswers) {
         Optional<Adopter> aOpt = adopterRepository.findById(adopterId);
         Optional<Pet> pOpt = petRepository.findById(petId);
-        if (aOpt.isEmpty() || pOpt.isEmpty()) throw new IllegalArgumentException("Invalid adopter or pet id");
+        if (aOpt.isEmpty() || pOpt.isEmpty())
+            throw new IllegalArgumentException("Invalid adopter or pet id");
 
         Adopter adopter = aOpt.get();
         Pet pet = pOpt.get();
@@ -60,12 +60,15 @@ public class ApplicationService {
 
     public List<Application> getApplicationsForShelter(Long shelterId) {
         // naive approach: return all apps for pets that belong to shelter
-        return applicationRepository.findAll().stream().filter(a -> a.getPet() != null && a.getPet().getShelter() != null && a.getPet().getShelter().getShelterId().equals(shelterId)).toList();
+        return applicationRepository.findAll().stream().filter(a -> a.getPet() != null
+                && a.getPet().getShelter() != null && a.getPet().getShelter().getShelterId().equals(shelterId))
+                .toList();
     }
 
     public Application updateApplicationStatus(Long applicationId, Application.ApplicationStatus newStatus) {
         Optional<Application> o = applicationRepository.findById(applicationId);
-        if (o.isEmpty()) throw new IllegalArgumentException("Application not found");
+        if (o.isEmpty())
+            throw new IllegalArgumentException("Application not found");
         Application app = o.get();
 
         // Do not allow changing status once it has reached a terminal state
@@ -93,5 +96,9 @@ public class ApplicationService {
         }
 
         return applicationRepository.save(app);
+    }
+
+    public long getApplicationCountForPet(Long petId) {
+        return applicationRepository.countByPetPetId(petId);
     }
 }
