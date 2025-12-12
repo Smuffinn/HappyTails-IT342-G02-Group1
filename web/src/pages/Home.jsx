@@ -16,6 +16,7 @@ export default function Home() {
 
   useEffect(() => {
     let mounted = true
+    setLoading(true)
     async function loadFeaturedPets() {
       try {
         const pets = await petService.getAllPets()
