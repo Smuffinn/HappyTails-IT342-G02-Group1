@@ -1,105 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { petService } from '../services/petservice'
 import PetQuickView from '../modules/pets/PetQuickView.jsx'
-import pet1 from '../assets/pet1.jpg'
-import pet2 from '../assets/pet2.jpg'
-import pet3 from '../assets/pet3.jpg'
-import pet4 from '../assets/pet4.jpg'
-import pet5 from '../assets/pet5.jpg'
-import pet6 from '../assets/pet6.jpg'
-import pet7 from '../assets/pet7.jpg'
-import pet8 from '../assets/pet8.jpg'
-
-const mockPets = [
-  {
-    id: 1,
-    name: 'Luna',
-    breed: 'Golden Retriever',
-    age: '2 years',
-    size: 'large',
-    species: 'Dog',
-    gender: 'Female',
-    imageUrl: pet1,
-    tags: ['Friendly', 'Playful'],
-  },
-  {
-    id: 2,
-    name: 'Whiskers',
-    breed: 'Tabby Mix',
-    age: '3 years',
-    size: 'medium',
-    species: 'Cat',
-    gender: 'Female',
-    imageUrl: pet3,
-    tags: ['Independent', 'Calm'],
-  },
-  {
-    id: 3,
-    name: 'Max',
-    breed: 'Beagle',
-    age: '4 years',
-    size: 'medium',
-    species: 'Dog',
-    gender: 'Male',
-    imageUrl: pet2,
-    tags: ['Curious', 'Friendly'],
-  },
-  {
-    id: 4,
-    name: 'Mittens',
-    breed: 'Siamese',
-    age: '1 year',
-    size: 'small',
-    species: 'Cat',
-    gender: 'Female',
-    imageUrl: pet4,
-    tags: ['Vocal', 'Social'],
-  },
-  {
-    id: 5,
-    name: 'Bella',
-    breed: 'French Bulldog',
-    age: '3 years',
-    size: 'small',
-    species: 'Dog',
-    gender: 'Female',
-    imageUrl: pet5,
-    tags: ['Affectionate', 'Playful'],
-  },
-  {
-    id: 6,
-    name: 'Charlie',
-    breed: 'Labrador Mix',
-    age: '5 years',
-    size: 'large',
-    species: 'Dog',
-    gender: 'Male',
-    imageUrl: pet6,
-    tags: ['Loyal', 'Calm'],
-  },
-  {
-    id: 7,
-    name: 'Hoppy',
-    breed: 'Lop-Eared',
-    age: '2 years',
-    size: 'small',
-    species: 'Rabbit',
-    gender: 'Male',
-    imageUrl: pet7,
-    tags: ['Gentle', 'Quiet'],
-  },
-  {
-    id: 8,
-    name: 'Tweety',
-    breed: 'Canary',
-    age: '1 year',
-    size: 'small',
-    species: 'Bird',
-    gender: 'Unknown',
-    imageUrl: pet8,
-    tags: ['Cheerful', 'Active'],
-  },
-]
 
 export default function DiscoverPage() {
   const [pets, setPets] = useState([])
@@ -120,10 +21,10 @@ export default function DiscoverPage() {
       try {
         const data = await petService.getAllPets()
         if (!mounted) return
-        setPets(Array.isArray(data) && data.length > 0 ? data : mockPets)
+        setPets(Array.isArray(data) ? data : [])
       } catch (err) {
         setError(err)
-        setPets(mockPets)
+        setPets([])
       } finally {
         setLoading(false)
       }
@@ -134,7 +35,7 @@ export default function DiscoverPage() {
     }
   }, [])
 
-  const sourcePets = useMemo(() => (pets.length ? pets : mockPets), [pets])
+  const sourcePets = useMemo(() => pets, [pets])
 
   const toTitleCase = (value) => value.replace(/\w+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
 
