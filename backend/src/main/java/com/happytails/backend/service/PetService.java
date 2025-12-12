@@ -72,7 +72,12 @@ public class PetService {
 
         // Handle photos JSON
         if (req.getPhotosJson() != null) {
-            pet.setPhotosJson(req.getPhotosJson());
+            String json = req.getPhotosJson().trim();
+            // If it looks like a raw URL and not a JSON array/object, wrap it
+            if (!json.startsWith("[") && !json.startsWith("{") && (json.startsWith("http") || json.startsWith("/"))) {
+                json = "[\"" + json + "\"]";
+            }
+            pet.setPhotosJson(json);
         }
 
         return petRepository.save(pet);
@@ -112,7 +117,11 @@ public class PetService {
             pet.setTemperament(req.getTemperament());
         }
         if (req.getPhotosJson() != null) {
-            pet.setPhotosJson(req.getPhotosJson());
+            String json = req.getPhotosJson().trim();
+            if (!json.startsWith("[") && !json.startsWith("{") && (json.startsWith("http") || json.startsWith("/"))) {
+                json = "[\"" + json + "\"]";
+            }
+            pet.setPhotosJson(json);
         }
 
         // Handle size enum
