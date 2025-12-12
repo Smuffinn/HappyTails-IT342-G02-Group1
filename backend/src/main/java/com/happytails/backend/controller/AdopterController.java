@@ -2,9 +2,11 @@ package com.happytails.backend.controller;
 
 import com.happytails.backend.dto.UpdateAdopterProfileRequest;
 import com.happytails.backend.dto.UpdateAdopterRequest;
+import com.happytails.backend.dto.ChangePasswordRequest;
 import com.happytails.backend.model.Adopter;
 import com.happytails.backend.service.AdopterService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,6 +59,23 @@ public class AdopterController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
+        }
+    }
+
+    // Change current adopter password
+    @PutMapping("/change-password")
+    public ResponseEntity<String> changeAdopterPassword(@Valid @RequestBody ChangePasswordRequest request) {
+        Optional<String> emailOpt = getCurrentUserEmail();
+        if (emailOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        try {
+            adopterService.changeAdopterPassword(emailOpt.get(), request.getCurrentPassword(), request.getNewPassword());
+            return ResponseEntity.ok("Password changed successfully");
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to change password");
         }
     }
 

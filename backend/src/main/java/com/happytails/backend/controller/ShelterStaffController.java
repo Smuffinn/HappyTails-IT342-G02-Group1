@@ -2,6 +2,7 @@ package com.happytails.backend.controller;
 
 import com.happytails.backend.dto.UpdateShelterRequest;
 import com.happytails.backend.dto.UpdateStaffProfileRequest;
+import com.happytails.backend.dto.ChangePasswordRequest;
 import com.happytails.backend.model.Shelter;
 import com.happytails.backend.model.ShelterStaff;
 import com.happytails.backend.service.ShelterStaffService;
@@ -32,6 +33,14 @@ public class ShelterStaffController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         ShelterStaff updatedStaff = shelterStaffService.updateStaffProfile(email, request);
         return ResponseEntity.ok(updatedStaff);
+    }
+
+    // Change current staff password
+    @PutMapping("/change-password")
+    public ResponseEntity<String> changeStaffPassword(@Valid @RequestBody ChangePasswordRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        shelterStaffService.changeStaffPassword(email, request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.ok("Password changed successfully");
     }
 
     // Delete current staff account

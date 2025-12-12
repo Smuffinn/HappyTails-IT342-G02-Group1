@@ -1,6 +1,7 @@
 package com.happytails.backend.service;
 
 import com.happytails.backend.dto.UpdateStaffProfileRequest;
+import com.happytails.backend.dto.ChangePasswordRequest;
 import com.happytails.backend.exception.UserNotFoundException;
 import com.happytails.backend.model.Shelter;
 import com.happytails.backend.model.ShelterStaff;
@@ -75,6 +76,22 @@ public class ShelterStaffService {
         }
 
         return shelterStaffRepository.save(staff);
+    }
+
+    // Change staff password
+    public void changeStaffPassword(String email, String currentPassword, String newPassword) {
+        ShelterStaff staff = getStaffByEmail(email);
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, staff.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        // Hash and set new password
+        String hashedPassword = passwordEncoder.encode(newPassword);
+        staff.setPassword(hashedPassword);
+
+        shelterStaffRepository.save(staff);
     }
 
     // FR-5: Get shelter details for the current staff member

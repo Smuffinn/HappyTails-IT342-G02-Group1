@@ -84,4 +84,20 @@ public class AdopterService {
                 .orElseThrow(() -> new UserNotFoundException("Adopter not found with id: " + id));
         adopterRepository.delete(adopter);
     }
+
+    public void changeAdopterPassword(String email, String currentPassword, String newPassword) {
+        Adopter adopter = adopterRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Adopter not found with email: " + email));
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, adopter.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        // Hash and set new password
+        String hashedPassword = passwordEncoder.encode(newPassword);
+        adopter.setPassword(hashedPassword);
+
+        adopterRepository.save(adopter);
+    }
 }
