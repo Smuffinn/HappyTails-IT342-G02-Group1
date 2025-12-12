@@ -45,10 +45,13 @@ public class PetService {
         // Handle Enums safely (defaulting to Medium if invalid or missing)
         try {
             if (req.getSize() != null) {
-                pet.setSize(Pet.PetSize.valueOf(req.getSize()));
+                pet.setSize(Pet.PetSize.fromString(req.getSize()));
             } else {
                 pet.setSize(Pet.PetSize.Medium);
             }
+            // Fallback if fromString returns null
+            if (pet.getSize() == null)
+                pet.setSize(Pet.PetSize.Medium);
         } catch (IllegalArgumentException e) {
             pet.setSize(Pet.PetSize.Medium);
         }
@@ -61,7 +64,7 @@ public class PetService {
         // Handle gender
         try {
             if (req.getGender() != null) {
-                pet.setGender(Pet.PetGender.valueOf(req.getGender()));
+                pet.setGender(Pet.PetGender.fromString(req.getGender()));
             }
         } catch (IllegalArgumentException e) {
             // Invalid gender, skip
@@ -115,7 +118,7 @@ public class PetService {
         // Handle size enum
         try {
             if (req.getSize() != null && !req.getSize().isEmpty()) {
-                pet.setSize(Pet.PetSize.valueOf(req.getSize()));
+                pet.setSize(Pet.PetSize.fromString(req.getSize()));
             }
         } catch (IllegalArgumentException e) {
             // Invalid size, keep existing
@@ -124,7 +127,7 @@ public class PetService {
         // Handle gender enum
         try {
             if (req.getGender() != null && !req.getGender().isEmpty()) {
-                pet.setGender(Pet.PetGender.valueOf(req.getGender()));
+                pet.setGender(Pet.PetGender.fromString(req.getGender()));
             }
         } catch (IllegalArgumentException e) {
             // Invalid gender, keep existing
@@ -160,11 +163,9 @@ public class PetService {
             String temperament,
             String shelterLocation,
             Integer minAge,
-            Integer maxAge
-    ) {
+            Integer maxAge) {
         Specification<Pet> spec = PetSpecification.filterPets(
-                species, gender, breed, size, temperament, shelterLocation, minAge, maxAge
-        );
+                species, gender, breed, size, temperament, shelterLocation, minAge, maxAge);
         return petRepository.findAll(spec);
     }
 }

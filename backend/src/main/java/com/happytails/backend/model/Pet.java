@@ -64,15 +64,36 @@ public class Pet {
     @JsonIgnoreProperties(value = { "applications", "adoptedPets" }, allowSetters = true)
     private Adopter adopter;
 
+    public Pet() {
+    }
+
     public enum PetStatus {
-        Available, Pending, Adopted
+        Available, Pending, Adopted;
+
+        @com.fasterxml.jackson.annotation.JsonCreator
+        public static PetStatus fromString(String key) {
+            return key == null ? null
+                    : PetStatus.valueOf(key.substring(0, 1).toUpperCase() + key.substring(1).toLowerCase());
+        }
     }
 
     public enum PetSize {
-        Small, Medium, Large
+        Small, Medium, Large;
+
+        @com.fasterxml.jackson.annotation.JsonCreator
+        public static PetSize fromString(String key) {
+            return key == null ? null
+                    : PetSize.valueOf(key.substring(0, 1).toUpperCase() + key.substring(1).toLowerCase());
+        }
     }
 
     public enum PetGender {
-        Male, Female
+        Male, Female;
+
+        @com.fasterxml.jackson.annotation.JsonCreator
+        public static PetGender fromString(String key) {
+            return key == null ? null
+                    : PetGender.valueOf(key.substring(0, 1).toUpperCase() + key.substring(1).toLowerCase());
+        }
     }
 }
