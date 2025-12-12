@@ -94,12 +94,13 @@ export const authService = {
   updateProfile: async (payload) => {
     try {
       const role = getUserRoleFromToken()
-      
+
       if (role === 'staff') {
-        // Staff profiles are read-only
-        throw new Error('Staff profiles cannot be edited')
+        // Staff can update their profile including name and phone
+        const res = await api.put('/staff/me', payload)
+        return res.data
       }
-      
+
       // Default to adopter endpoint
       const res = await api.put('/adopters/profile', payload)
       return res.data
@@ -148,24 +149,6 @@ export const authService = {
     }
   },
 
-  changePassword: async (payload) => {
-    try {
-      const role = getUserRoleFromToken()
-      
-      if (role === 'staff') {
-        const res = await api.put('/staff/change-password', payload)
-        return res.data
-      }
-      
-      // Default to adopter endpoint
-      const res = await api.put('/adopters/change-password', payload)
-      return res.data
-    } catch (err) {
-      const payload = err.response && err.response.data ? err.response.data : null
-      const msg = (payload && (payload.error || payload.message)) || (payload && payload.errors ? JSON.stringify(payload.errors) : null) || err.message || String(err)
-      throw new Error(msg)
-    }
-  }
 }
 
 export default authService

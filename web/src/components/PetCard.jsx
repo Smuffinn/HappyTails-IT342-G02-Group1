@@ -47,11 +47,17 @@ export default function PetCard({ pet = {} }) {
     <article className="bg-white rounded-2xl shadow-lg overflow-hidden ring-1 ring-slate-100 hover:shadow-2xl transition-shadow duration-200">
       <div className="relative">
         <div className="overflow-hidden rounded-t-2xl">
-          <img
-            src={imageUrl || '/vite.svg'}
-            alt={name}
-            className="w-full h-56 object-cover block"
-          />
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={name}
+              className="w-full h-56 object-cover block"
+            />
+          ) : (
+            <div className="w-full h-56 bg-emerald-50 flex items-center justify-center">
+              <span className="text-6xl" role="img" aria-label="paw print">🐾</span>
+            </div>
+          )}
         </div>
 
         <button

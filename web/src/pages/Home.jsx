@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { petService } from '../services/petservice'
-import PetQuickView from '../modules/pets/PetQuickView.jsx'
 import PetCard from '../components/PetCard.jsx'
+import PetQuickView from '../modules/pets/PetQuickView.jsx'
 
 
 export default function Home() {

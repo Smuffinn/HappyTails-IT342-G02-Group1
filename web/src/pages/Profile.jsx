@@ -47,6 +47,9 @@ export default function Profile() {
     profilePersonalInfo: '',
     profileResidenceDetails: '',
     profilePetExperience: '',
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
   })
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showPasswordForm, setShowPasswordForm] = useState(false)
@@ -61,6 +64,9 @@ export default function Profile() {
       profilePersonalInfo: profile?.profilePersonalInfo ?? '',
       profileResidenceDetails: profile?.profileResidenceDetails ?? '',
       profilePetExperience: profile?.profilePetExperience ?? '',
+      firstName: profile?.firstName ?? '',
+      lastName: profile?.lastName ?? '',
+      phoneNumber: profile?.phoneNumber ?? '',
     }),
     [profile],
   )
@@ -78,7 +84,10 @@ export default function Profile() {
     return (
       form.profilePersonalInfo !== profileSnapshot.profilePersonalInfo ||
       form.profileResidenceDetails !== profileSnapshot.profileResidenceDetails ||
-      form.profilePetExperience !== profileSnapshot.profilePetExperience
+      form.profilePetExperience !== profileSnapshot.profilePetExperience ||
+      form.firstName !== profileSnapshot.firstName ||
+      form.lastName !== profileSnapshot.lastName ||
+      form.phoneNumber !== profileSnapshot.phoneNumber
     )
   }, [editing, form, profileSnapshot])
 
@@ -110,6 +119,9 @@ export default function Profile() {
           profilePersonalInfo: data.profilePersonalInfo || '',
           profileResidenceDetails: data.profileResidenceDetails || '',
           profilePetExperience: data.profilePetExperience || '',
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          phoneNumber: data.phoneNumber || '',
         })
         return data
       } catch (err) {
@@ -143,36 +155,64 @@ export default function Profile() {
     setError(null)
     try {
       const nextErrors = {}
-      const trimmedPersonal = form.profilePersonalInfo.trim()
-      const trimmedResidence = form.profileResidenceDetails.trim()
-      const trimmedExperience = form.profilePetExperience.trim()
 
-      if (!trimmedPersonal) {
-        nextErrors.profilePersonalInfo = 'Please tell us a bit about yourself.'
-      }
-      if (!trimmedResidence) {
-        nextErrors.profileResidenceDetails = 'Let shelters know about your living situation.'
-      }
-      if (!trimmedExperience) {
-        nextErrors.profilePetExperience = 'Share your experience caring for animals.'
+      if (isStaff) {
+        // Staff validation - only name and phone are required for staff
+        const trimmedFirstName = form.firstName.trim()
+        const trimmedLastName = form.lastName.trim()
+        const trimmedPhone = form.phoneNumber.trim()
+
+        if (!trimmedFirstName) {
+          nextErrors.firstName = 'First name is required.'
+        }
+        if (!trimmedLastName) {
+          nextErrors.lastName = 'Last name is required.'
+        }
+        if (!trimmedPhone) {
+          nextErrors.phoneNumber = 'Phone number is required.'
+        }
+
+        const payload = {
+          firstName: trimmedFirstName,
+          lastName: trimmedLastName,
+          phoneNumber: trimmedPhone,
+        }
+
+        await authService.updateProfile(payload)
+      } else {
+        // Adopter validation - profile fields are required for adopters
+        const trimmedPersonal = form.profilePersonalInfo.trim()
+        const trimmedResidence = form.profileResidenceDetails.trim()
+        const trimmedExperience = form.profilePetExperience.trim()
+
+        if (!trimmedPersonal) {
+          nextErrors.profilePersonalInfo = 'Please tell us a bit about yourself.'
+        }
+        if (!trimmedResidence) {
+          nextErrors.profileResidenceDetails = 'Let shelters know about your living situation.'
+        }
+        if (!trimmedExperience) {
+          nextErrors.profilePetExperience = 'Share your experience caring for animals.'
+        }
+
+        if (Object.keys(nextErrors).length > 0) {
+          setFieldErrors(nextErrors)
+          setSaving(false)
+          return
+        }
+
+        const payload = {
+          profilePersonalInfo: trimmedPersonal,
+          profileResidenceDetails: trimmedResidence,
+          profilePetExperience: trimmedExperience,
+        }
+
+        await authService.updateProfile(payload)
       }
 
-      if (Object.keys(nextErrors).length > 0) {
-        setFieldErrors(nextErrors)
-        setSaving(false)
-        return
-      }
-
-      const payload = {
-        profilePersonalInfo: trimmedPersonal,
-        profileResidenceDetails: trimmedResidence,
-        profilePetExperience: trimmedExperience,
-      }
-
-      await authService.updateProfile(payload)
       setStatusMessage('Profile updated successfully.')
       setEditing(false)
-      setForm(payload)
+      // Reload the profile to get updated data
       await loadProfile({ skipLoadingState: true })
       setFieldErrors({})
     } catch (err) {
@@ -181,7 +221,7 @@ export default function Profile() {
     } finally {
       setSaving(false)
     }
-  }, [form, loadProfile])
+  }, [form, isStaff, loadProfile])
 
   const handleDelete = useCallback(async () => {
     const confirmed = window.confirm('Delete your account? This cannot be undone.')
@@ -410,6 +450,9 @@ export default function Profile() {
                   profilePersonalInfo: profile?.profilePersonalInfo || '',
                   profileResidenceDetails: profile?.profileResidenceDetails || '',
                   profilePetExperience: profile?.profilePetExperience || '',
+                  firstName: profile?.firstName || '',
+                  lastName: profile?.lastName || '',
+                  phoneNumber: profile?.phoneNumber || '',
                 })
                 setFieldErrors({})
               }}
@@ -453,6 +496,142 @@ export default function Profile() {
           {profile?.staffId ?? 'Unavailable'}
         </div>
       </div>
+
+      {!editing ? (
+        <div style={{ display: 'grid', gap: 18 }}>
+          <div>
+            <div style={{ fontWeight: 600, color: 'var(--color-text-muted)' }}>Name</div>
+            <div
+              style={{
+                marginTop: 8,
+                background: 'var(--color-surface-alt)',
+                borderRadius: 18,
+                padding: '16px 18px',
+                color: 'var(--color-text)',
+              }}
+            >
+              {profile?.firstName || profile?.lastName
+                ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim()
+                : 'Name not provided yet.'}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontWeight: 600, color: 'var(--color-text-muted)' }}>Phone Number</div>
+            <div
+              style={{
+                marginTop: 8,
+                background: 'var(--color-surface-alt)',
+                borderRadius: 18,
+                padding: '16px 18px',
+                color: 'var(--color-text)',
+              }}
+            >
+              {profile?.phoneNumber || 'Phone number not provided yet.'}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, color: 'var(--color-text)' }}>First Name</label>
+              <input
+                type="text"
+                value={form.firstName}
+                onChange={(e) => setForm((prev) => ({ ...prev, firstName: e.target.value }))}
+                className="input"
+                style={{
+                  marginTop: 8,
+                  borderRadius: 14,
+                  padding: '12px 16px',
+                  border: '1px solid rgba(84,135,104,0.25)',
+                }}
+                placeholder="Enter your first name"
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, color: 'var(--color-text)' }}>Last Name</label>
+              <input
+                type="text"
+                value={form.lastName}
+                onChange={(e) => setForm((prev) => ({ ...prev, lastName: e.target.value }))}
+                className="input"
+                style={{
+                  marginTop: 8,
+                  borderRadius: 14,
+                  padding: '12px 16px',
+                  border: '1px solid rgba(84,135,104,0.25)',
+                }}
+                placeholder="Enter your last name"
+              />
+            </div>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, color: 'var(--color-text)' }}>Phone Number</label>
+            <input
+              type="tel"
+              value={form.phoneNumber}
+              onChange={(e) => setForm((prev) => ({ ...prev, phoneNumber: e.target.value }))}
+              className="input"
+              style={{
+                marginTop: 8,
+                borderRadius: 14,
+                padding: '12px 16px',
+                border: '1px solid rgba(84,135,104,0.25)',
+              }}
+              placeholder="Enter your phone number"
+            />
+          </div>
+          {hasUnsavedChanges && (
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#4f8a3a' }}>You have unsaved updates.</div>
+          )}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleSave}
+              disabled={saving || !hasUnsavedChanges}
+            >
+              {saving ? 'Saving…' : 'Save changes'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => {
+                setEditing(false)
+                setForm({
+                  profilePersonalInfo: profile?.profilePersonalInfo || '',
+                  profileResidenceDetails: profile?.profileResidenceDetails || '',
+                  profilePetExperience: profile?.profilePetExperience || '',
+                  firstName: profile?.firstName || '',
+                  lastName: profile?.lastName || '',
+                  phoneNumber: profile?.phoneNumber || '',
+                })
+                setFieldErrors({})
+              }}
+              disabled={saving}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!editing && (
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              setFieldErrors({})
+              setStatusMessage(null)
+              setEditing(true)
+            }}
+          >
+            Edit profile
+          </button>
+        </div>
+      )}
 
       {!showPasswordForm ? (
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
