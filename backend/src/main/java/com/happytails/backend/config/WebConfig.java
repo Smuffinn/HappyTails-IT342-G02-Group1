@@ -16,3 +16,4 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("file:" + Paths.get("uploads").toAbsolutePath() + "/");
     }
 }
+

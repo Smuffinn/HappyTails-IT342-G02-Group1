@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { petService } from '../services/petservice'
 import PetQuickView from '../modules/pets/PetQuickView.jsx'
+import PetCard from '../components/PetCard.jsx'
 
 export default function DiscoverPage() {
   const [pets, setPets] = useState([])
@@ -244,36 +245,11 @@ export default function DiscoverPage() {
           <>
             <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32, marginTop: 8 }}>
               {filteredPets.map((pet, index) => (
-                <div key={pet.id ?? pet.name ?? index} style={{ background: '#fff', borderRadius: 20, boxShadow: '0 8px 28px rgba(84,135,104,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 320 }}>
-                  {pet.imageUrl ? (
-                    <img src={pet.imageUrl} alt={pet.name} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: '100%', height: 160, background: 'linear-gradient(135deg, #e8f5e9 0%, #f1efe6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}>🐾</div>
-                  )}
-                  <div style={{ padding: 18 }}>
-                    <div style={{ fontWeight: 700, fontSize: 17 }}>{pet.name}</div>
-                    <div style={{ color: '#5e7263', fontSize: 14, marginBottom: 8 }}>{pet.breed} - {pet.age}</div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {pet.tags && pet.tags.length
-                        ? pet.tags.map((trait) => (
-                            <span key={trait} style={{ background: '#f1efe6', borderRadius: 999, padding: '4px 12px', fontWeight: 600, fontSize: 13 }}>{trait}</span>
-                          ))
-                        : null}
-                    </div>
-                  </div>
-                  <div style={{ borderTop: '1px solid #f1efe6', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 600, color: '#4f8a3a', fontSize: 15 }}>
-                      {pet.status === 'Adopted' ? 'Adopted' : 'Ready for adoption'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setQuickViewPet(pet)}
-                      style={{ background: 'var(--color-cta)', color: '#fff', borderRadius: 999, fontWeight: 600, padding: '8px 22px', border: 'none', cursor: 'pointer' }}
-                    >
-                      View
-                    </button>
-                  </div>
-                </div>
+                <PetCard
+                  key={pet.id ?? pet.name ?? index}
+                  pet={pet}
+                  onApply={() => setQuickViewPet(pet)}
+                />
               ))}
             </section>
             {quickViewPet && (
