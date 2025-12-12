@@ -236,7 +236,7 @@ export default function Applications() {
 
                           {a.supplementaryAnswers && (
                             <div>
-                              <span className="font-semibold text-slate-800">Supplementary Answers</span>
+                              <span className="font-semibold text-slate-800">Applicant Details</span>
                               <div className="mt-1 rounded-2xl bg-slate-50 px-4 py-3 text-slate-600 whitespace-pre-line">
                                 {a.supplementaryAnswers}
                               </div>
