@@ -10,6 +10,7 @@ export default function Register() {
   const [password, setPassword] = useState('')
   const [shelterId, setShelterId] = useState('')
   const [shelters, setShelters] = useState([])
+  const [sheltersLoading, setSheltersLoading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [fieldErrors, setFieldErrors] = useState({})
@@ -25,9 +26,13 @@ export default function Register() {
     if (!password.trim()) nextFieldErrors.password = 'Password is required.'
     if (password && password.trim().length < 6) nextFieldErrors.password = 'Password must be at least 6 characters.'
     if (isStaffMode) {
-      const numericShelterId = Number(shelterId)
-      if (!shelterId || Number.isNaN(numericShelterId) || numericShelterId <= 0) {
-        nextFieldErrors.shelterId = 'Shelter is required for staff accounts.'
+      if (!shelterId || !shelterId.trim()) {
+        nextFieldErrors.shelterId = 'Please select a shelter from the list.'
+      } else if (shelters && shelters.length > 0 && !shelters.some(shelter => {
+        const shelterName = shelter.name ?? shelter.shelterName ?? `Shelter ${shelter.shelterId ?? shelter.id}`
+        return shelterName === shelterId.trim()
+      })) {
+        nextFieldErrors.shelterId = 'Please select a valid shelter from the dropdown.'
       }
     }
     setFieldErrors(nextFieldErrors)
@@ -37,6 +42,19 @@ export default function Register() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!validate()) return
+
+    // Additional check for staff mode - ensure shelters are loaded and available
+    if (mode === 'staff') {
+      if (sheltersLoading) {
+        setError('Please wait for shelters to load before submitting.')
+        return
+      }
+      if (!shelters || shelters.length === 0) {
+        setError('No shelters are currently available for registration. Please contact your shelter administrator.')
+        return
+      }
+    }
+
     setLoading(true)
     setError(null)
     setSuccess(null)
@@ -45,7 +63,7 @@ export default function Register() {
         await registerAdopter({ email: email.trim(), password: password.trim() })
         setSuccess('Adopter account created. You can now log in.')
       } else {
-        const payload = { email: email.trim(), password: password.trim(), shelterId: Number(shelterId) }
+        const payload = { email: email.trim(), password: password.trim(), shelterName: shelterId.trim() }
         await registerStaff(payload)
         setSuccess('Shelter staff account created. You can now log in.')
       }
@@ -66,16 +84,25 @@ export default function Register() {
 
   useEffect(() => {
     let mounted = true
-    // Load shelters for the staff signup dropdown. If the endpoint fails,
-    // keep the field as manual numeric input fallback.
+    setSheltersLoading(true)
+    // Load shelters for the staff signup dropdown from the database
     api
       .get('/shelters')
       .then((res) => {
         if (!mounted) return
-        setShelters(res.data || [])
+        const shelterList = res.data || []
+        setShelters(shelterList)
+        if (shelterList.length === 0) {
+          console.warn('No shelters found in database')
+        }
       })
-      .catch(() => {
-        // ignore errors; fallback to manual input
+      .catch((err) => {
+        if (!mounted) return
+        console.error('Failed to load shelters:', err)
+        setShelters([])
+      })
+      .finally(() => {
+        if (mounted) setSheltersLoading(false)
       })
     return () => {
       mounted = false
@@ -184,45 +211,77 @@ export default function Register() {
             {isStaffMode && (
               <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 Shelter
-                {shelters && shelters.length > 0 ? (
+                {sheltersLoading ? (
+                  <div style={{ padding: '12px 16px', color: '#5e7263', fontStyle: 'italic' }}>
+                    Loading shelters...
+                  </div>
+                ) : (
                   <select
                     value={shelterId}
                     onChange={e => setShelterId(e.target.value)}
                     required
-                    style={{ borderRadius: 10, border: '1px solid #d6e2d6', padding: '12px 16px', fontSize: '1rem', background: '#fff', fontFamily: 'inherit' }}
+                    disabled={sheltersLoading}
+                    style={{
+                      borderRadius: 10,
+                      border: '1px solid #d6e2d6',
+                      padding: '12px 16px',
+                      fontSize: '1rem',
+                      background: '#fff',
+                      fontFamily: 'inherit',
+                      cursor: sheltersLoading ? 'not-allowed' : 'pointer',
+                      opacity: sheltersLoading ? 0.6 : 1
+                    }}
                   >
-                    <option value="">Select your shelter</option>
-                    {shelters.map((shelter) => {
-                      const value = shelter.shelterId ?? shelter.id
-                      const label = shelter.name ?? shelter.shelterName ?? `Shelter ${value}`
+                    <option value="">
+                      {sheltersLoading
+                        ? 'Loading shelters...'
+                        : shelters && shelters.length > 0
+                        ? '-- Select your shelter --'
+                        : 'No shelters available'}
+                    </option>
+                    {shelters && shelters.map((shelter) => {
+                      const shelterName = shelter.name ?? shelter.shelterName ?? `Shelter ${shelter.shelterId ?? shelter.id}`
+                      const shelterLocation = shelter.location ? ` (${shelter.location})` : ''
                       return (
-                        <option key={value ?? label} value={value ?? ''}>
-                          {label}
+                        <option key={shelter.shelterId ?? shelter.id} value={shelterName}>
+                          {shelterName}{shelterLocation}
                         </option>
                       )
                     })}
                   </select>
-                ) : (
-                  <input
-                    type="number"
-                    value={shelterId}
-                    onChange={e => setShelterId(e.target.value)}
-                    placeholder="Enter shelter id (ask admin)"
-                    style={{ borderRadius: 10, border: '1px solid #d6e2d6', padding: '12px 16px', fontSize: '1rem', background: '#fff', fontFamily: 'inherit' }}
-                  />
                 )}
                 {fieldErrors.shelterId && <span style={{ color: '#d64545', fontSize: '0.85rem' }}>{fieldErrors.shelterId}</span>}
-                <span style={{ fontSize: '0.85rem', color: '#5e7263' }}>If you don't have a shelter id, ask your shelter administrator.</span>
+                <span style={{ fontSize: '0.85rem', color: '#5e7263' }}>
+                  {sheltersLoading
+                    ? 'Loading available shelters...'
+                    : shelters && shelters.length > 0
+                    ? 'Select your shelter from the list above.'
+                    : 'No shelters are currently available for registration. Please contact your shelter administrator.'}
+                </span>
               </label>
             )}
             {error && <div style={{ color: '#d64545', fontSize: '0.95rem' }}>{error}</div>}
             {success && <div style={{ color: '#78c977', fontSize: '0.95rem' }}>{success}</div>}
             <button
               type="submit"
-              disabled={loading}
-              style={{ border: 'none', borderRadius: 999, padding: '12px 28px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', background: '#78c977', color: '#fff', boxShadow: '0 6px 12px rgba(120, 201, 119, 0.35)', marginBottom: 16 }}
+              disabled={loading || (mode === 'staff' && (!shelters || shelters.length === 0))}
+              style={{
+                border: 'none',
+                borderRadius: 999,
+                padding: '12px 28px',
+                fontSize: '1rem',
+                fontWeight: 600,
+                cursor: (loading || (mode === 'staff' && (!shelters || shelters.length === 0))) ? 'not-allowed' : 'pointer',
+                background: (loading || (mode === 'staff' && (!shelters || shelters.length === 0))) ? '#ccc' : '#78c977',
+                color: '#fff',
+                boxShadow: (loading || (mode === 'staff' && (!shelters || shelters.length === 0))) ? 'none' : '0 6px 12px rgba(120, 201, 119, 0.35)',
+                marginBottom: 16,
+                opacity: (loading || (mode === 'staff' && (!shelters || shelters.length === 0))) ? 0.6 : 1
+              }}
             >
-              {loading ? 'Creating…' : mode === 'adopter' ? 'Create adopter account' : 'Create staff account'}
+              {loading ? 'Creating…' :
+               mode === 'staff' && (!shelters || shelters.length === 0) ? 'No shelters available' :
+               mode === 'adopter' ? 'Create adopter account' : 'Create staff account'}
             </button>
             <div style={{ textAlign: 'center', color: '#5e7263', marginTop: 8 }}>
               Already have an account?{' '}

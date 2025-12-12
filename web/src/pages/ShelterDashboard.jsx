@@ -29,15 +29,85 @@ export default function ShelterDashboard() {
   const [shelterProfile, setShelterProfile] = useState(null)
   const [pets, setPets] = useState([])
 
-  const [staffForm, setStaffForm] = useState({ firstName: '', lastName: '', phoneNumber: '', email: '', password: '' })
+  const [staffForm, setStaffForm] = useState({ firstName: '', lastName: '', phoneNumber: '', email: '' })
   const [shelterForm, setShelterForm] = useState({ name: '', location: '', contactInfo: '' })
 
   const [petForm, setPetForm] = useState(emptyPetForm)
   const [editingPetId, setEditingPetId] = useState(null)
   const [petFormError, setPetFormError] = useState(null)
+  const [dragActive, setDragActive] = useState(false)
 
   const [statusMessage, setStatusMessage] = useState(null)
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
+
+  const handleDrag = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const files = Array.from(e.dataTransfer.files)
+      handleFiles(files)
+    }
+  }
+
+  const handleFileInput = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const files = Array.from(e.target.files)
+      handleFiles(files)
+    }
+  }
+
+  const handleFiles = (files) => {
+    const imageFiles = files.filter((file) => file.type.startsWith('image/'))
+    if (imageFiles.length === 0) {
+      setPetFormError('Please upload image files (JPG, PNG, GIF, etc.)')
+      return
+    }
+
+    // Convert files to base64 or URLs
+    const filePromises = imageFiles.map((file) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const result = reader.result
+          // Validate base64 string is complete and properly formatted
+          if (result && typeof result === 'string' && result.startsWith('data:')) {
+            resolve(result)
+          } else {
+            resolve(null)
+          }
+        }
+        reader.onerror = () => {
+          resolve(null)
+        }
+        reader.readAsDataURL(file)
+      })
+    })
+
+    Promise.all(filePromises).then((dataUrls) => {
+      const currentPhotos = petForm.photos ? petForm.photos.split(',').map((p) => p.trim()) : []
+      const allPhotos = [...currentPhotos, ...dataUrls].filter(Boolean)
+      setPetForm((prev) => ({ ...prev, photos: allPhotos.join(', ') }))
+      setPetFormError(null)
+    })
+  }
+
+  const removePhoto = (index) => {
+    const photos = petForm.photos.split(',').map((p) => p.trim())
+    photos.splice(index, 1)
+    setPetForm((prev) => ({ ...prev, photos: photos.join(', ') }))
+  }
 
   const petBelongsToShelter = (pet, shelterId) => {
     if (!shelterId) return false
@@ -76,7 +146,6 @@ export default function ShelterDashboard() {
           lastName: staff?.lastName || '',
           phoneNumber: staff?.phoneNumber || '',
           email: staff?.email || '',
-          password: '',
         }))
         setShelterForm({
           name: shelter?.name || '',
@@ -188,29 +257,48 @@ export default function ShelterDashboard() {
   }
 
   const buildPetRequest = () => {
-    const request = {
-      name: petForm.name.trim(),
-      species: petForm.species.trim(),
-      breed: petForm.breed.trim(),
-      age: petForm.age.trim(),
-      size: petForm.size.trim(),
-      gender: petForm.gender.trim(),
-      description: petForm.description.trim(),
-      temperament: petForm.temperament.trim(),
-      photosJson: undefined,
+    const formData = new FormData()
+
+    // Add text fields
+    formData.append('name', petForm.name.trim())
+    formData.append('species', petForm.species.trim())
+    if (petForm.breed.trim()) formData.append('breed', petForm.breed.trim())
+    if (petForm.age.trim()) formData.append('age', petForm.age.trim())
+    if (petForm.size.trim()) formData.append('size', petForm.size.trim())
+    if (petForm.gender.trim()) formData.append('gender', petForm.gender.trim())
+    formData.append('description', petForm.description.trim())
+    if (petForm.temperament.trim()) formData.append('temperament', petForm.temperament.trim())
+
+    // Add uploaded files (not base64 data URLs)
+    if (petForm.photos) {
+      const photoList = petForm.photos
+        .split(',')
+        .map((link) => link.trim())
+        .filter(Boolean)
+        .filter((photo) => {
+          // Only include base64 data URLs (uploaded files)
+          return photo.startsWith('data:image/')
+        })
+
+      photoList.forEach((photoDataUrl, index) => {
+        // Convert base64 data URL to Blob
+        const [mimeType, base64Data] = photoDataUrl.split(',')
+        const mime = mimeType.split(':')[1].split(';')[0]
+        const byteCharacters = atob(base64Data)
+        const byteNumbers = new Array(byteCharacters.length)
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
+        }
+        const byteArray = new Uint8Array(byteNumbers)
+        const blob = new Blob([byteArray], { type: mime })
+
+        // Create File object
+        const file = new File([blob], `photo-${index + 1}.jpg`, { type: mime })
+        formData.append('photos', file)
+      })
     }
 
-    const photoList = petForm.photos
-      .split(',')
-      .map((link) => link.trim())
-      .filter(Boolean)
-    if (photoList.length) {
-      request.photosJson = JSON.stringify(photoList)
-    } else {
-      request.photosJson = null
-    }
-
-    return request
+    return formData
   }
 
   const handlePetSubmit = async (event) => {
@@ -331,7 +419,7 @@ export default function ShelterDashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 18, flexWrap: 'wrap' }}>
             <div style={{ display: 'grid', gap: 8 }}>
               <h2 style={{ margin: 0, fontSize: '1.6rem', color: '#253b2f' }}>Your staff profile</h2>
-              <p style={{ margin: 0, color: '#5e7263' }}>Contact details help adopters and other volunteers reach you quickly.</p>
+              <p style={{ margin: 0, color: '#5e7263' }}>Contact details help adopters and other volunteers reach you quickly. To change your password, visit your <button type="button" onClick={() => navigate('/profile')} style={{ background: 'none', border: 'none', color: '#4f8a3a', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>account profile</button>.</p>
             </div>
           </div>
 
@@ -372,16 +460,6 @@ export default function ShelterDashboard() {
                 type="email"
                 value={staffForm.email}
                 onChange={(e) => setStaffForm((prev) => ({ ...prev, email: e.target.value }))}
-                className="input"
-                style={{ borderRadius: 14, padding: '12px 16px', border: '1px solid rgba(84,135,104,0.25)' }}
-              />
-            </div>
-            <div style={{ display: 'grid', gap: 6 }}>
-              <label>New password (optional)</label>
-              <input
-                type="password"
-                value={staffForm.password}
-                onChange={(e) => setStaffForm((prev) => ({ ...prev, password: e.target.value }))}
                 className="input"
                 style={{ borderRadius: 14, padding: '12px 16px', border: '1px solid rgba(84,135,104,0.25)' }}
               />
@@ -454,7 +532,7 @@ export default function ShelterDashboard() {
 
           <form onSubmit={handlePetSubmit} style={{ display: 'grid', gap: 14 }}>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Pet name</label>
+              <label>Pet name <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(text)</span></label>
               <input
                 type="text"
                 value={petForm.name}
@@ -465,7 +543,7 @@ export default function ShelterDashboard() {
               />
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Species</label>
+              <label>Species <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(text)</span></label>
               <input
                 type="text"
                 value={petForm.species}
@@ -477,7 +555,7 @@ export default function ShelterDashboard() {
               />
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Breed</label>
+              <label>Breed <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(text)</span></label>
               <input
                 type="text"
                 value={petForm.breed}
@@ -487,7 +565,7 @@ export default function ShelterDashboard() {
               />
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Age</label>
+              <label>Age <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(text)</span></label>
               <input
                 type="text"
                 value={petForm.age}
@@ -498,7 +576,7 @@ export default function ShelterDashboard() {
               />
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Size</label>
+              <label>Size <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(text)</span></label>
               <input
                 type="text"
                 value={petForm.size}
@@ -509,7 +587,7 @@ export default function ShelterDashboard() {
               />
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Gender</label>
+              <label>Gender <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(text)</span></label>
               <input
                 type="text"
                 value={petForm.gender}
@@ -520,7 +598,7 @@ export default function ShelterDashboard() {
               />
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Description</label>
+              <label>Description <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(text)</span></label>
               <textarea
                 value={petForm.description}
                 onChange={(e) => setPetForm((prev) => ({ ...prev, description: e.target.value }))}
@@ -529,7 +607,7 @@ export default function ShelterDashboard() {
               />
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Temperament (comma separated)</label>
+              <label>Temperament <span style={{ color: '#5e7263', fontSize: '0.85rem', fontWeight: 'normal' }}>(comma separated)</span></label>
               <textarea
                 value={petForm.temperament}
                 onChange={(e) => setPetForm((prev) => ({ ...prev, temperament: e.target.value }))}
@@ -537,13 +615,101 @@ export default function ShelterDashboard() {
               />
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
-              <label>Photo URLs (comma separated)</label>
-              <textarea
-                value={petForm.photos}
-                onChange={(e) => setPetForm((prev) => ({ ...prev, photos: e.target.value }))}
-                style={{ ...textAreaStyle, minHeight: 80 }}
-                placeholder="https://example.com/photo1.jpg, https://example.com/photo2.jpg"
-              />
+              <label>Photos (optional)</label>
+              <div style={{ fontSize: '0.85rem', color: '#5e7263', marginBottom: 8 }}>
+                Upload images (JPG, PNG, GIF) or add image URLs. Base64 images are displayed locally but not sent to server.
+              </div>
+              <div
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                style={{
+                  borderRadius: 14,
+                  border: `2px dashed ${dragActive ? '#4f8a3a' : 'rgba(84,135,104,0.25)'}`,
+                  padding: '28px 20px',
+                  textAlign: 'center',
+                  background: dragActive ? 'rgba(79, 138, 58, 0.08)' : 'transparent',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileInput}
+                  style={{ display: 'none' }}
+                  id="photo-upload"
+                />
+                <label htmlFor="photo-upload" style={{ cursor: 'pointer', display: 'block' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📸</div>
+                  <div style={{ fontWeight: 600, color: '#253b2f', marginBottom: '4px' }}>
+                    Drop photos here or click to browse
+                  </div>
+                  <div style={{ fontSize: '0.9rem', color: '#5e7263' }}>
+                    Drag and drop images or select multiple files (JPG, PNG, GIF)
+                  </div>
+                </label>
+              </div>
+
+              {petForm.photos && (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#253b2f' }}>
+                    Uploaded photos ({petForm.photos.split(',').filter(Boolean).length})
+                  </div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    {petForm.photos
+                      .split(',')
+                      .map((photo) => photo.trim())
+                      .filter(Boolean)
+                      .map((photo, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            display: 'flex',
+                            gap: 12,
+                            alignItems: 'center',
+                            padding: '10px 12px',
+                            background: 'rgba(84,135,104,0.08)',
+                            borderRadius: 10,
+                          }}
+                        >
+                          {photo.startsWith('data:') ? (
+                            <img
+                              src={photo}
+                              alt={`Photo ${index + 1}`}
+                              style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <div style={{ width: 40, height: 40, borderRadius: 6, background: '#d0d0d0', display: 'grid', placeItems: 'center', fontSize: '1.2rem' }}>
+                              🖼️
+                            </div>
+                          )}
+                          <span style={{ flex: 1, wordBreak: 'break-all', fontSize: '0.9rem', color: '#5e7263' }}>
+                            {photo.length > 60 ? `${photo.substring(0, 60)}...` : photo}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(index)}
+                            style={{
+                              background: 'rgba(210, 63, 87, 0.12)',
+                              color: '#812334',
+                              border: 'none',
+                              borderRadius: 6,
+                              padding: '6px 10px',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              fontSize: '0.85rem',
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>

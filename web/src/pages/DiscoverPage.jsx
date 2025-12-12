@@ -245,7 +245,11 @@ export default function DiscoverPage() {
             <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32, marginTop: 8 }}>
               {filteredPets.map((pet, index) => (
                 <div key={pet.id ?? pet.name ?? index} style={{ background: '#fff', borderRadius: 20, boxShadow: '0 8px 28px rgba(84,135,104,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 320 }}>
-                  <img src={pet.imageUrl} alt={pet.name} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
+                  {pet.imageUrl ? (
+                    <img src={pet.imageUrl} alt={pet.name} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: 160, background: 'linear-gradient(135deg, #e8f5e9 0%, #f1efe6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}>🐾</div>
+                  )}
                   <div style={{ padding: 18 }}>
                     <div style={{ fontWeight: 700, fontSize: 17 }}>{pet.name}</div>
                     <div style={{ color: '#5e7263', fontSize: 14, marginBottom: 8 }}>{pet.breed} - {pet.age}</div>

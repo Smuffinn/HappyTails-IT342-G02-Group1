@@ -1,0 +1,52 @@
+services:
+  # Backend API service (Spring Boot)
+  - type: web
+    name: happytails-api
+    runtime: docker
+    region: singapore
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/pets
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: happytails-db
+          property: connectionString
+      - key: DATABASE_USERNAME
+        fromDatabase:
+          name: happytails-db
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: happytails-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+
+  # Frontend service (React Static Site)
+  - type: web
+    name: happytails-web
+    runtime: static
+    region: singapore
+    plan: free
+    rootDir: web
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://happytails-api.onrender.com/api
+
+databases:
+  - name: happytails-db
+    databaseName: happytails
+    plan: free
+    region: singapore

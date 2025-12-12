@@ -94,17 +94,35 @@ export default function PetQuickView({ pet, onClose }) {
             justifyContent: 'center',
           }}
         >
-          <img
-            src={pet.imageUrl}
-            alt={pet.name}
-            style={{
-              width: 220,
-              height: 220,
-              borderRadius: 24,
-              objectFit: 'cover',
-              boxShadow: '0 12px 28px rgba(84,135,104,0.18)',
-            }}
-          />
+          {pet.imageUrl ? (
+            <img
+              src={pet.imageUrl}
+              alt={pet.name}
+              style={{
+                width: 220,
+                height: 220,
+                borderRadius: 24,
+                objectFit: 'cover',
+                boxShadow: '0 12px 28px rgba(84,135,104,0.18)',
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 220,
+                height: 220,
+                borderRadius: 24,
+                background: '#e3e2da',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#7c7b70',
+                fontSize: 48,
+              }}
+            >
+              🐾
+            </div>
+          )}
         </div>
         <div style={{ flex: 2, padding: '24px 28px 24px 0', display: 'flex', flexDirection: 'column', gap: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18, marginBottom: 4 }}>

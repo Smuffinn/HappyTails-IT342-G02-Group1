@@ -168,7 +168,13 @@ export const petService = {
 
   createPet: async (payload) => {
     try {
-      const res = await api.post('/pets', payload)
+      // Use FormData headers for multipart uploads
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+      const res = await api.post('/pets', payload, config)
       return res.data
     } catch (err) {
       throw new Error(extractMessage(err))
@@ -177,7 +183,13 @@ export const petService = {
 
   updatePet: async (petId, payload) => {
     try {
-      const res = await api.put(`/pets/${petId}`, payload)
+      // Use FormData headers for multipart uploads
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+      const res = await api.put(`/pets/${petId}`, payload, config)
       return res.data
     } catch (err) {
       throw new Error(extractMessage(err))
