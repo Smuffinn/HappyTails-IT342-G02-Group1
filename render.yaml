@@ -11,10 +11,18 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: DATABASE_URL
+      - key: DATABASE_HOST
         fromDatabase:
           name: happytails-db
-          property: connectionString
+          property: host
+      - key: DATABASE_PORT
+        fromDatabase:
+          name: happytails-db
+          property: port
+      - key: DATABASE_NAME
+        fromDatabase:
+          name: happytails-db
+          property: database
       - key: DATABASE_USERNAME
         fromDatabase:
           name: happytails-db
