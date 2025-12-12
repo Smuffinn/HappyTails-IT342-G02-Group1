@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   preview: {
-    allowedHosts: ['happytails-web.onrender.com', 'localhost'],
+    allowedHosts: ['happytails-web.onrender.com', 'happytails-web-2ym6.onrender.com', 'localhost'],
   },
   server: {
     proxy: {

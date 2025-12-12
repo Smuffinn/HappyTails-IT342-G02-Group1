@@ -51,7 +51,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://happytails-api.onrender.com/api
+        value: https://happytails-api-e5tg.onrender.com/api
 
 databases:
   - name: happytails-db
