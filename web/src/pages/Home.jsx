@@ -11,9 +11,11 @@ export default function Home() {
   const [authMessage, setAuthMessage] = useState('')
   const [quickViewPet, setQuickViewPet] = useState(null)
   const [featuredPets, setFeaturedPets] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
+    setLoading(true)
     async function loadFeaturedPets() {
       try {
         const pets = await petService.getAllPets()
@@ -21,6 +23,8 @@ export default function Home() {
         setFeaturedPets(Array.isArray(pets) ? pets.slice(0, 6) : [])
       } catch (err) {
         setFeaturedPets([])
+      } finally {
+        if (mounted) setLoading(false)
       }
     }
     loadFeaturedPets()
