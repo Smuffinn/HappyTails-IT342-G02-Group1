@@ -16,8 +16,13 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allow all origins using patterns (supports credentials)
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        // Allow specific origins (React dev server and production)
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",  // Vite default port
+                "http://localhost:5174",  // Vite alternative port
+                "http://localhost:3000",  // Alternative React port
+                "http://localhost:4173"   // Vite preview port
+        ));
         
         // Allow all HTTP methods
         configuration.setAllowedMethods(Arrays.asList(

@@ -14,14 +14,29 @@ const api = axios.create({
 
 // Attach Authorization header automatically when token is present
 api.interceptors.request.use((config) => {
+  // Don't add Authorization header for auth endpoints (login, register)
+  if (config.url && config.url.includes('/auth/')) {
+    return config
+  }
+
   try {
-    const token = JSON.parse(localStorage.getItem('happytails_token'))
-    if (token) {
-      config.headers = config.headers || {}
-      config.headers.Authorization = `Bearer ${token}`
+    const storedToken = localStorage.getItem('happytails_token')
+    if (storedToken) {
+      let token = storedToken
+      // If stored as JSON string, parse it
+      try {
+        token = JSON.parse(storedToken)
+      } catch (e) {
+        // Already a plain string
+      }
+      // Only add header if we have a valid token
+      if (token && typeof token === 'string' && token.trim()) {
+        config.headers = config.headers || {}
+        config.headers.Authorization = `Bearer ${token}`
+      }
     }
   } catch (e) {
-    // ignore
+    // ignore any errors
   }
   return config
 })

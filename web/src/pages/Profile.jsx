@@ -48,6 +48,9 @@ export default function Profile() {
     profileResidenceDetails: '',
     profilePetExperience: '',
   })
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [passwordErrors, setPasswordErrors] = useState({})
   const [fieldErrors, setFieldErrors] = useState({})
 
   const userRoleLabel = useMemo(() => (isStaff ? 'Shelter Staff' : 'Adopter'), [isStaff])
@@ -196,6 +199,49 @@ export default function Profile() {
       setSaving(false)
     }
   }, [logout])
+
+  const handlePasswordChange = useCallback(async () => {
+    setSaving(true)
+    setPasswordErrors({})
+    setError(null)
+    try {
+      const nextErrors = {}
+
+      if (!passwordForm.currentPassword.trim()) {
+        nextErrors.currentPassword = 'Please enter your current password.'
+      }
+      if (!passwordForm.newPassword.trim()) {
+        nextErrors.newPassword = 'Please enter your new password.'
+      }
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        nextErrors.confirmPassword = 'Passwords do not match.'
+      }
+      if (passwordForm.newPassword.trim().length < 6) {
+        nextErrors.newPassword = 'Password must be at least 6 characters.'
+      }
+
+      if (Object.keys(nextErrors).length > 0) {
+        setPasswordErrors(nextErrors)
+        setSaving(false)
+        return
+      }
+
+      await authService.changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      })
+
+      setStatusMessage('Password changed successfully.')
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setShowPasswordForm(false)
+      setPasswordErrors({})
+    } catch (err) {
+      const message = typeof err?.message === 'string' && err.message.trim().length > 0 ? err.message : 'Unable to change password.'
+      setError(message)
+    } finally {
+      setSaving(false)
+    }
+  }, [passwordForm])
 
   const renderAdoptedPets = () => {
     if (!profile?.adoptedPets?.length) return null
@@ -407,17 +453,116 @@ export default function Profile() {
           {profile?.staffId ?? 'Unavailable'}
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          className="btn"
-          style={{ background: '#f37c7c', color: '#fff', boxShadow: '0 6px 14px rgba(243, 124, 124, 0.3)' }}
-          onClick={handleDelete}
-          disabled={saving}
-        >
-          {saving ? 'Processing…' : 'Delete account'}
-        </button>
-      </div>
+
+      {!showPasswordForm ? (
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              setShowPasswordForm(true)
+              setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+              setPasswordErrors({})
+              setError(null)
+            }}
+          >
+            Change password
+          </button>
+          <button
+            type="button"
+            className="btn"
+            style={{ background: '#f37c7c', color: '#fff', boxShadow: '0 6px 14px rgba(243, 124, 124, 0.3)' }}
+            onClick={handleDelete}
+            disabled={saving}
+          >
+            {saving ? 'Processing…' : 'Delete account'}
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: 14, padding: '18px 20px', background: 'rgba(122,192,91,0.08)', borderRadius: 18 }}>
+          <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-text)' }}>Change password</h3>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label style={{ display: 'block', fontWeight: 600, color: 'var(--color-text)' }}>Current password</label>
+            <input
+              type="password"
+              value={passwordForm.currentPassword}
+              onChange={(e) => setPasswordForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
+              className="input"
+              style={{
+                borderRadius: 14,
+                padding: '12px 16px',
+                border: '1px solid rgba(84,135,104,0.25)',
+              }}
+              placeholder="Enter your current password"
+            />
+            {passwordErrors.currentPassword && (
+              <div style={{ color: '#d64545', fontSize: 13 }}>{passwordErrors.currentPassword}</div>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label style={{ display: 'block', fontWeight: 600, color: 'var(--color-text)' }}>New password</label>
+            <input
+              type="password"
+              value={passwordForm.newPassword}
+              onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+              className="input"
+              style={{
+                borderRadius: 14,
+                padding: '12px 16px',
+                border: '1px solid rgba(84,135,104,0.25)',
+              }}
+              placeholder="Enter your new password"
+            />
+            {passwordErrors.newPassword && (
+              <div style={{ color: '#d64545', fontSize: 13 }}>{passwordErrors.newPassword}</div>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label style={{ display: 'block', fontWeight: 600, color: 'var(--color-text)' }}>Confirm password</label>
+            <input
+              type="password"
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+              className="input"
+              style={{
+                borderRadius: 14,
+                padding: '12px 16px',
+                border: '1px solid rgba(84,135,104,0.25)',
+              }}
+              placeholder="Confirm your new password"
+            />
+            {passwordErrors.confirmPassword && (
+              <div style={{ color: '#d64545', fontSize: 13 }}>{passwordErrors.confirmPassword}</div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handlePasswordChange}
+              disabled={saving}
+            >
+              {saving ? 'Updating…' : 'Update password'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => {
+                setShowPasswordForm(false)
+                setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+                setPasswordErrors({})
+              }}
+              disabled={saving}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 

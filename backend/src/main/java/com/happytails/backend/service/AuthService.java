@@ -65,9 +65,9 @@ public class AuthService {
             throw new EmailAlreadyExistsException("Email is already in use: " + request.getEmail());
         }
 
-        // Step 2: Find the shelter they belong to
-        Shelter shelter = shelterRepository.findById(request.getShelterId())
-                .orElseThrow(() -> new ResourceNotFoundException("Shelter not found with ID: " + request.getShelterId()));
+        // Step 2: Find the shelter they belong to by name
+        Shelter shelter = shelterRepository.findByName(request.getShelterName())
+                .orElseThrow(() -> new ResourceNotFoundException("Shelter not found with name: " + request.getShelterName()));
 
         ShelterStaff staff = new ShelterStaff();
         staff.setEmail(request.getEmail());
