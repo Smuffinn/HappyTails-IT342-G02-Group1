@@ -19,7 +19,10 @@ public class PetService {
     private PetRepository petRepository;
 
     public List<Pet> getAllPets() {
-        return petRepository.findAll();
+        // Only return pets that are not yet adopted for public discovery
+        return petRepository.findAll().stream()
+                .filter(pet -> pet.getStatus() != Pet.PetStatus.Adopted)
+                .toList();
     }
 
     public Optional<Pet> getPetById(Long id) {

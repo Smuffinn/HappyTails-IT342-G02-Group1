@@ -227,7 +227,9 @@ export default function Home() {
                   </div>
                 </div>
                 <div style={{ borderTop: '1px solid #f1efe6', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 600, color: '#4f8a3a', fontSize: 15 }}>Ready for adoption</span>
+                  <span style={{ fontWeight: 600, color: '#4f8a3a', fontSize: 15 }}>
+                    {pet.status === 'Adopted' ? 'Adopted' : 'Ready for adoption'}
+                  </span>
                   <button
                     type="button"
                     onClick={() => setQuickViewPet({ ...pet, imageUrl: pet.img })}
