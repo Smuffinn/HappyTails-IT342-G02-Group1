@@ -70,7 +70,17 @@ export default function PetCard({ pet = {} }) {
         <p className="text-sm text-slate-400 mt-2">{age} • {size}</p>
 
         <div className="mt-3">
-          <span className="text-xs uppercase font-medium px-2 py-1 rounded text-slate-700 bg-slate-100">{pet?.raw?.status ?? 'Unknown'}</span>
+          <span className={`text-xs uppercase font-medium px-2 py-1 rounded ${
+            pet?.raw?.status === 'Available'
+              ? 'text-emerald-700 bg-emerald-100'
+              : pet?.raw?.status === 'Adopted'
+              ? 'text-slate-700 bg-slate-100'
+              : pet?.raw?.status === 'Pending'
+              ? 'text-amber-700 bg-amber-100'
+              : 'text-slate-700 bg-slate-100'
+          }`}>
+            {pet?.raw?.status ?? 'Unknown'}
+          </span>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -88,18 +98,21 @@ export default function PetCard({ pet = {} }) {
           )}
         </div>
 
-        {/* Apply button for adopters when pet is Available */}
+        {/* Apply/Adopted button based on pet status */}
         {(() => {
           try {
             const token = JSON.parse(localStorage.getItem('happytails_token'))
             const isAuthenticated = !!token
             const status = pet?.raw?.status || ''
+
             if (status === 'Available') {
               // allow parent to override handling via pet.onApply
               if (typeof pet.onApply === 'function') {
                 return (
                   <div className="mt-4">
-                    <button onClick={() => pet.onApply(pet)} className="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm">Apply to Adopt</button>
+                    <button onClick={() => pet.onApply(pet)} className="px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700 transition-colors">
+                      Apply to Adopt
+                    </button>
                   </div>
                 )
               }
@@ -108,9 +121,21 @@ export default function PetCard({ pet = {} }) {
                 <div className="mt-4">
                   <button
                     onClick={handleApply}
-                    className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded bg-emerald-600 text-white text-sm"
+                    className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition-colors"
                   >
                     Apply to Adopt
+                  </button>
+                </div>
+              )
+            } else if (status === 'Adopted') {
+              return (
+                <div className="mt-4">
+                  <button
+                    disabled
+                    className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded bg-slate-400 text-white text-sm cursor-not-allowed opacity-75"
+                  >
+                    <span className="text-base" aria-hidden>🏠</span>
+                    Adopted
                   </button>
                 </div>
               )

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { petService } from '../services/petservice'
 import PetQuickView from '../modules/pets/PetQuickView.jsx'
-import { petService } from '../services/petservice'
+import PetCard from '../components/PetCard.jsx'
 
 
 export default function Home() {
@@ -188,32 +188,19 @@ export default function Home() {
           <h2 style={{ fontSize: '2.1rem', margin: '0 0 12px', color: '#253b2f' }}>Featured Pets</h2>
           <p style={{ color: '#5e7263', margin: '0 0 32px', fontSize: 16 }}>Meet some of our adorable pets looking for homes</p>
           <div style={{ display: 'grid', gap: 28, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-            {featuredPetsDisplay.map((pet, index) => (
-              <div key={pet.id ?? `${pet.name}-${index}`} style={{ background: '#fff', borderRadius: 20, boxShadow: '0 8px 28px rgba(84,135,104,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 320 }}>
-                <img src={pet.imageUrl || pet.img} alt={pet.name} onError={handleImageError} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
-                <div style={{ padding: 18 }}>
-                  <div style={{ fontWeight: 700, fontSize: 17 }}>{pet.name}</div>
-                  <div style={{ color: '#5e7263', fontSize: 14, marginBottom: 8 }}>{pet.breed} - {pet.age}</div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {(pet.tags || pet.traits || []).map(trait => (
-                      <span key={trait} style={{ background: '#f1efe6', borderRadius: 999, padding: '4px 12px', fontWeight: 600, fontSize: 13 }}>{trait}</span>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ borderTop: '1px solid #f1efe6', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 600, color: '#4f8a3a', fontSize: 15 }}>
-                    {pet.status === 'Adopted' ? 'Adopted' : 'Ready for adoption'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuickViewPet({ ...pet, imageUrl: pet.imageUrl || pet.img })}
-                    style={{ background: 'var(--color-cta)', color: '#fff', borderRadius: 999, fontWeight: 600, padding: '8px 22px', border: 'none', cursor: 'pointer' }}
-                  >
-                    View
-                  </button>
-                </div>
-              </div>
-            ))}
+            {loading ? (
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px 0', color: '#5e7263' }}>Loading featured pets…</div>
+            ) : featuredPets.length === 0 ? (
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px 0', color: '#5e7263' }}>No pets available yet.</div>
+            ) : (
+              featuredPets.map((pet, index) => (
+                <PetCard
+                  key={pet.id ?? `${pet.name}-${index}`}
+                  pet={pet}
+                  onApply={() => setQuickViewPet(pet)}
+                />
+              ))
+            )}
             {quickViewPet && (
               <PetQuickView pet={quickViewPet} onClose={() => setQuickViewPet(null)} />
             )}
