@@ -127,6 +127,44 @@ export const authService = {
       const msg = (payload && (payload.error || payload.message)) || (payload && payload.errors ? JSON.stringify(payload.errors) : null) || err.message || String(err)
       throw new Error(msg)
     }
+  },
+
+  changePassword: async (payload) => {
+    try {
+      const role = getUserRoleFromToken()
+      
+      if (role === 'staff') {
+        const res = await api.put('/staff/change-password', payload)
+        return res.data
+      }
+      
+      // Default to adopter endpoint
+      const res = await api.put('/adopters/change-password', payload)
+      return res.data
+    } catch (err) {
+      const payload = err.response && err.response.data ? err.response.data : null
+      const msg = (payload && (payload.error || payload.message)) || (payload && payload.errors ? JSON.stringify(payload.errors) : null) || err.message || String(err)
+      throw new Error(msg)
+    }
+  },
+
+  changePassword: async (payload) => {
+    try {
+      const role = getUserRoleFromToken()
+      
+      if (role === 'staff') {
+        const res = await api.put('/staff/change-password', payload)
+        return res.data
+      }
+      
+      // Default to adopter endpoint
+      const res = await api.put('/adopters/change-password', payload)
+      return res.data
+    } catch (err) {
+      const payload = err.response && err.response.data ? err.response.data : null
+      const msg = (payload && (payload.error || payload.message)) || (payload && payload.errors ? JSON.stringify(payload.errors) : null) || err.message || String(err)
+      throw new Error(msg)
+    }
   }
 }
 

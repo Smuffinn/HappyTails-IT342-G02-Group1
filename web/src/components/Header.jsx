@@ -11,7 +11,7 @@ const navContainerStyle = {
 
 const navLinkBaseStyle = {
   background: 'none',
-  border: 'none',
+  borderBottom: 'none',
   cursor: 'pointer',
   fontWeight: 600,
   padding: '4px 0',
@@ -133,10 +133,9 @@ export default function Header() {
                 style={{
                   ...navLinkBaseStyle,
                   color: location.pathname === '/login' ? '#253b2f' : '#4f8a3a',
-                  borderBottom: location.pathname === '/login' ? '2px solid #4f8a3a' : 'none',
                   padding: '8px 18px',
                   borderRadius: 999,
-                  border: '1px solid rgba(79,138,58,0.3)',
+                  border: location.pathname === '/login' ? '2px solid #4f8a3a' : '1px solid rgba(79,138,58,0.3)',
                 }}
               >
                 Log in

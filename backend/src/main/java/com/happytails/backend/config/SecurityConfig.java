@@ -3,6 +3,7 @@ package com.happytails.backend.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -43,7 +44,9 @@ public class SecurityConfig {
                 // Configure authorization
                 .authorizeHttpRequests(authorize -> authorize
                         // Allow unauthenticated access to auth endpoints and pet listings
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register-adopter").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register-staff").permitAll()
                         .requestMatchers("/api/shelters/**").permitAll()
                         .requestMatchers("/api/pets/**").permitAll()
                         .requestMatchers("/api/staff/**").authenticated()
